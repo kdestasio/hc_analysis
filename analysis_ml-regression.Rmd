@@ -1,7 +1,7 @@
 ---
 title: 'Hunter College Anxiety Dot-Probe: Machine Learning Regression Analysis'
 author: "Krista DeStasio"
-date: "11/6/2018"
+date: "11/06/2018"
 output:
   html_document:
     toc: yes
@@ -21,6 +21,14 @@ rm(list = ls())
 
 # Set paths and working directory
 working_dir = '~/Dropbox/collaborations/hunter_college/hc_analysis/'
+path_datafile = paste0(working_dir, '/data/N=844_FINAL_Traditional metrics_Trial Level metrics_questionnaires (n=837)_6.16.18.xlsx')
+setwd(working_dir)
+
+# Install and load required packages
+list.of.packages <- c('janitor', 'caret', 'elasticnet', 'ranger', 'randomForest')
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])] 
+if (length(new.packages)) install.packages(new.packages, repos = "http://cran.us.r-project.org")
+lapply(list.of.packages, library, character.only = TRUE)
 
 # Knit options
 knitr::opts_chunk$set(echo = TRUE)
@@ -89,3 +97,33 @@ In addition to testing that a model can be created to predict anxiety scores, we
 6. Adjust model parameters as needed - set hyperparameters. (repeat steps 3-5 until satisfied).  
 7. Test final model on the hold-out sample.  
 8. Evaluate model performance.  
+
+## Data Cleaning
+```{r Read in the data, include=FALSE}
+dataframe_session1 <- clean_names(readxl::read_excel(path_datafile, sheet = 1, col_names = TRUE))
+dataframe_questionnaires <- clean_names(readxl::read_excel(path_datafile, sheet = 2, col_names = TRUE, skip = 1))
+dataframe_tlmetrics <- clean_names(readxl::read_excel(path_datafile, sheet = 1, col_names = TRUE))
+```
+```{r Check the data, include=FALSE}
+str(dataframe_session1)
+str(dataframe_questionnaires)
+str(dataframe_tlmetrics)
+
+table(c(colnames(dataframe_session1),
+        colnames(dataframe_questionnaires),
+        colnames(dataframe_tlmetrics)))
+```
+
+### Three variables are dropped from this data set
+
+1. `session number` - all data are from a single session, making this variable irrelevant.  
+2. `date of birth` - age is also a variable in this data set. DOB is ommitted as it would be perfectly correlated with age, which is retained.  
+3. `subject id` - this is an identification tag, not a meaningful variable.  
+
+```{r Create full data frame, include=FALSE}
+abmt_data = clean_names(readxl::read_excel(path_datafile))
+# Drop the session and date of birth columns
+abmt_data = subset(abmt_data, select = -c(session, dob, subject_id))
+# Display number of observations & features
+dim(abmt_data)
+```
