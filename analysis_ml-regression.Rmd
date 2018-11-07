@@ -1,0 +1,91 @@
+---
+title: 'Hunter College Anxiety Dot-Probe: Machine Learning Regression Analysis'
+author: "Krista DeStasio"
+date: "11/6/2018"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 3
+    toc_float: no
+  pdf_document:
+    latex_engine: xelatex
+    toc: yes
+editor_options:
+  chunk_output_type: inline
+---
+
+
+```{r setup, include=FALSE}
+# Clear workspace
+rm(list = ls()) 
+
+# Set paths and working directory
+working_dir = '~/Dropbox/collaborations/hunter_college/hc_analysis/'
+
+# Knit options
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+# Data
+The data are the first dot probe and the self-report questionnaires from the study pictured below.  
+
+![Figure 1. Study Design](/Users/kristadestasio/Dropbox/collaborations/hunter_college/study_design)
+
+## Dot Probe Measures 
+
+- `rt_neutral_nt`: Average RT on all neutral trials  
+- `rt_threat_nt`: Average RT on all threat trials  
+- `rt_baseline`: Average RT on baseline trials where two neutral faces appear and there is no competition for attention between threat and neutral faces; These trials appear randomly throughout the task  
+- `rt_outliers`: # of trials considered to be outliers based on the following criteria (RTs faster than 150 ms or slower than 2000 ms; any trial RT that was +/- 3 SD from the person’s mean RT for that trial type)  
+- `mean_pos`: mean of positive trial-level threat bias scores  
+- `mean_neg`: mean of negative trial-level threat bias scores      
+- `peak_pos`: highest positive trial-level threat bias score
+- `peak_neg`: highest negative trial-level threat bias score           
+- `variability`: absolute value of the distance across all trial-level threat bias scores / number of pairs 
+
+## Questionnaires
+
+- **STAI**: The State-Trait Anxiety Inventory (STAI) is a measure consisted of 20 items assessing state and 20 items assessing trait anxiety.
+    * _Spielberger, C. D., Gorsuch, R. L., Lushene, R., Vagg, P. R., & Jacobs, G. A. (1983). Manual for the State-Trait Anxiety Inventory. Palo Alto, CA: Consulting Psychologists Press._  
+- **BDI-II**: The Beck Depression Inventory-Second Edition (BDI-II) is a 21-item self-report inventory assessing the severity of depression over the past two week.  
+    * _Beck, A. T., Steer, R. A., & Brown, G. K. (1996). Beck Depression Inventory–II. San Antonio: Psychological Corporation._  
+- **BAI**: The Beck Anxiety Inventory (BAI) is a 21-item self-report questionnaire measuring the general level of anxiety.  
+    * _Beck, A. T., Epstein, N., Brown, G., & Steer, R. A. (1988). An inventory for measuring clinical anxiety: Psychometric properties. Journal of Consulting and Clinical Psychology, 56(6), 893._  
+- **MASQ**: The Mood and Anxiety Symptom Questionnaire (short version) is a 62-item questionnaire that measures anxious symptoms, anxious arousal, depressive symptoms, and anhedonic depression in the past week period.  
+    * _Watson, D., & Clark, L. A. (1991). The Mood and Anxiety Symptom Questionnaire. Unpublished manuscript, University of Iowa, Department of Psychology, Iowa City._  
+- **PANAS**: The Positive and Negative Affect Schedule (PANAS) is a set of two 10-item scales that measure the current and general positive and negative affect.  
+    * _Watson, D., Clark, L. A., & Tellegen, A. (1988). Development and validation of brief measures of positive and negative affect: the PANAS scales. Journal of Personality and Social Psychology, 54(6), 1063._  
+
+# Regression Analysis: Outcome measure of interest is stai_trait_totalscore  
+
+**Analysis Plan: Supervised learning, regression analysis**
+
+Since values of the outcome measure (total trait anxiety score on the State-Trait Anxiety Inventory) are known, we will use supervised learning. With a continuous outcome variable a regression model is appropriate.  
+
+The data are to be split into a [training set, test set, and holdout set](https://en.wikipedia.org/wiki/Training,_test,_and_validation_sets). Will do an initial 80/20 split (development/holdout), then a subsequent 70/30 train/test split of the initial (80%) development set.  
+
+The goal of this analysis is to identify those features that are useful for predicting anxiety scores (trait) as measured by the State-Trait Anxiety Inventory (STAI).  
+
+In addition to testing that a model can be created to predict anxiety scores, we will conduct training on data frames of (1) all the predictors, (2) a subset without the dot probe measures, and (3) a subset without self-report measures. This will help us determine whether inclusion of the dot-probe and/or self-report questionnaires provides significant added predictive power. The best fitting model for each of these 3 data sets will be applied to the holdout sample. We will examine the final model to identify which predictors are most informative.  
+
+## Steps, outline
+
+1. Split the data into train/test sets and hold-out sets. Will do an initial 80/20 split (development/holdout), then a subsequent 70/30 train/test split of the initial (80%) development set.  
+2. Data cleaning/pre-processing
+3. Initial model specification  
+    - Select model parameters. (i.e., coefficients in linear regression)  
+        - Baseline STAI anxiety score    
+        - Baseline dot probe  
+    - Select algorithms  
+        - linear regression  
+        - Lasso  
+        - Elastic net  
+        - Random forest  
+    - Cross-validation  
+        - k-fold cross validation with 10 folds  
+4. Model testing on training set  
+5. Model testing on test set
+6. Adjust model parameters as needed - set hyperparameters. (repeat steps 3-5 until satisfied).  
+7. Test final model on the hold-out sample.  
+8. Evaluate model performance.  
