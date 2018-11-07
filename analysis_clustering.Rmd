@@ -36,20 +36,45 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 # Purpose
+## Motivation
 
-**Motivation**: *Tracy writes:* "As I see it our first goal is testing whether distinct attention bias grouping emerge from the dot probe and questionnaire data using classification algorithms. Once these groups are identified, we can look at whether these are treatment-relevant subgroups (i.e., ABMT training is more effective for one group versus the other)."  
+*Tracy writes:* "As I see it our first goal is testing whether distinct attention bias grouping emerge from the dot probe and questionnaire data using classification algorithms. Once these groups are identified, we can look at whether these are treatment-relevant subgroups (i.e., ABMT training is more effective for one group versus the other)."  
 
 "examine the conditions under which ABMT efficacy is boosted or disrupted, and to identify individual differences that impact training gains"
 
 A search for moderators that machine learning may be sensitive enough to detect.  
 
-**Unsupervised learning: [Behavioral segmentation](https://www.datascience.com/blog/k-means-clustering) by attention bias measures (Dot Probe)**  
+## Introduction
+The primary aim of this analysis is to identify whether meaningful subgroups emerge from the anxiety dot probe. If meaningful subgroups do emerge, our secondary aim is to whether cluster membership relates to anxiety as measured by the State-Trait Anxiety Inventory (STAI). To test this aim, group membership will be entered as an independent variable into a between-subjects ANOVA with STAI trait anxiety scores as the dependent measure of interest. This is done with the eventual goal of predicting treatment trajectories in an unrelated sample of ABMT recipients.  
 
-The primary purpose is to identify meaningful sub-groups in the anxiety dot probe. Once groups are defined, they will be entered into a within-subjects ANOVA to test whether cluster membership relates to anxiety as measured by the STAI. This is done with the eventual goal of predicting treatment trajectories in an unrelated sample of ABMT recipients.  
+## Methods
+All analyses will be conducted using R (R Core Team, 2018). I will run both a spectral clustering analysis and a k means cluster analysis to identify subgroups within the Anxiety Dot Probe measures as these approaches are well suited to numeric data. Prior to any analysis, the data will be split into development (80%) and holdout (20%) sets, then the development set will be further split into training (70%) and testing (30%) sets. 
 
-Because I want to use the clusters as a variable in the ANOVA, I will use hard clustering algorithms that assign each data point to a single cluster. I will start with a spectral clustering analysis.
 
-k  means cluster analysis as this approach is well suited to numeric data. The success of the clustering algorithms will be decided subjectively based on the distance metrics and a plot of the clustering solution. I will try to balance the number of clusters and within-cluster varience. If a satisfactory solution cannot be derived with k means clustering, I will try [spectral clustering](http://www.di.fc.ul.pt/~jpn/r/spectralclustering/spectralclustering.html)
+Dot Probe measures that will be included in the analysis include:  
+
+- `rt_neutral_nt`: Average RT on all neutral trials  
+- `rt_threat_nt`: Average RT on all threat trials  
+- `rt_baseline`: Average RT on baseline trials where two neutral faces appear and there is no competition for attention between threat and neutral faces; These trials appear randomly throughout the task  
+- `rt_outliers`: # of trials considered to be outliers based on the following criteria (RTs faster than 150 ms or slower than 2000 ms; any trial RT that was +/- 3 SD from the person’s mean RT for that trial type)  
+- `mean_pos`: mean of positive trial-level threat bias scores  
+- `mean_neg`: mean of negative trial-level threat bias scores      
+- `peak_pos`: highest positive trial-level threat bias score
+- `peak_neg`: highest negative trial-level threat bias score           
+- `variability`: absolute value of the distance across all trial-level threat bias scores / number of pairs 
+
+## Data preprocessing 
+Outliers were already removed from the data by our collaborators based on the percentage of trials that were answered correctly. Participants with an accuracy of .80 or greater are included in the dataset. There should be no missing data for the dot probe measures as the included metrics can be computed for anyone who completed the task.
+
+The training, testing, and holdout sets will be independently preprocessed. The datasets will be checked for variables that are linear combinations of other variables and those indicated will be removed. Variables will be standardized using the `scale()` function to mean = 0, and standard deviation = 1.  
+
+## K-Means Clustering Analysis
+Development. The number of clusters to begin with will be decided by comparing the results of several different methods:
+
+- The sum of squared error (SSE) scree plot  
+- The `NbClust` function with method `kmeans`  
+- [`factoextra::fviz_nbclust()`](https://www.datanovia.com/en/blog/types-of-clustering-methods-overview-and-quick-start-r-code/)  
+
 
 
 # Decision points to address in the pre-registration 
@@ -155,3 +180,5 @@ Available Dot Probe measures include:
 - [An overview of K means and hierarchical clustering, along with a good description of distance metrics](https://www.hackerearth.com/practice/machine-learning/machine-learning-algorithms/clustering-algorithms-evaluation-r/tutorial/)  
 - [Von Luxburg, U. (2007). A tutorial on spectral clustering. Statistics and Computing, 17(4), 395–416. http://doi.org/10.1007/s11222-007-9033-z](https://arxiv.org/pdf/0711.0189.pdf): Preprint of a tutorial on spectral clustering by the Max Planck Institute   
 - [Luxburg, U. V., Bousquet, O., & Belkin, M. (2005). Limits of spectral clustering. In Advances in neural information processing systems (pp. 857-864).](http://papers.nips.cc/paper/2692-limits-of-spectral-clustering.pdf): Preference for normalized over nonnormalized spectral clustering  
+- Unsupervised learning: [Behavioral segmentation](https://www.datascience.com/blog/k-means-clustering) by attention bias measures (Dot Probe)**  
+- [Spectral clustering R implementation](https://rpubs.com/nurakawa/spectral-clustering)
