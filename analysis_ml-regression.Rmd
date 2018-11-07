@@ -41,7 +41,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # Data
 The data are the first dot probe and the self-report questionnaires from the study pictured below.  
 
-![Figure 1. Study Design](/Users/kristadestasio/Dropbox/collaborations/hunter_college/study_design)
+![Figure 1. Study Design](/Users/kristadestasio/Dropbox/collaborations/hunter_college/study_design.png)
 
 ## Dot Probe Measures 
 
