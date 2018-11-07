@@ -35,5 +35,6 @@ To quantify attention bias from the dot probe.
 # Resources
 
 - See [this link](https://jimgrange.wordpress.com/tag/r-statistics/) for discussion of drift diffusion modeling in R.  
+- [THE DIFFUSION DECISION MODEL FOR NON-SPECIALISTS](http://star.psy.ohio-state.edu/wp/?page_id=169)
 
 
