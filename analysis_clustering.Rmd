@@ -31,7 +31,13 @@ knitr::opts_chunk$set(echo = TRUE)
 **Suggestions**
 - if have really high error (if the groups don't generalize well training to test) then what's the plan. Going to use different clustering algorithm? (random walk? classification and regression tree?) Network analysis tutorial from data science.
 - What other unsupervised learning methods might work?  
+    - [Density-Based Spatial Clustering of Applications with Noise (DBSCAN)](https://www.datascience.com/blog/k-means-alternatives) or [Hierarchical (H)DBSCAN]https://hdbscan.readthedocs.io/en/latest/how_hdbscan_works.html
+    - [Agglomerative clustering/Ward hierarchical clustering](https://scikit-learn.org/stable/modules/clustering.html#hierarchical-clustering)
+    - [Gaussian mixtures](https://scikit-learn.org/stable/modules/mixture.html#mixture): **No. Soft clustering.**
+    
 - What is the metric of how well it's doing?  
+    - Silhouette Coefficient
+    - Calinski-Harabaz Index
 - Identify ANOVA error term. See https://stats.idre.ucla.edu/other/mult-pkg/faq/general/faq-how-can-i-determine-the-correct-error-term-in-an-anova/
 
 
@@ -182,3 +188,5 @@ Available Dot Probe measures include:
 - [Luxburg, U. V., Bousquet, O., & Belkin, M. (2005). Limits of spectral clustering. In Advances in neural information processing systems (pp. 857-864).](http://papers.nips.cc/paper/2692-limits-of-spectral-clustering.pdf): Preference for normalized over nonnormalized spectral clustering  
 - Unsupervised learning: [Behavioral segmentation](https://www.datascience.com/blog/k-means-clustering) by attention bias measures (Dot Probe)**  
 - [Spectral clustering R implementation](https://rpubs.com/nurakawa/spectral-clustering)
+- [Drawbacks of K mean clustering](https://stats.stackexchange.com/questions/133656/how-to-understand-the-drawbacks-of-k-means)
+- [Alternatives for segmenting noisy data](https://www.datascience.com/blog/k-means-alternatives)
