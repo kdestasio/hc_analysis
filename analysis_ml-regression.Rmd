@@ -321,3 +321,1017 @@ featurePlot(x = development_set[, regVar][25:26],
             layout = c(3,1))
 ```
 
+## Model training
+
+- This website suggest regression with random forest: https://hackernoon.com/choosing-the-right-machine-learning-algorithm-68126944ce1f  
+
+- Scikit learn recommends regression with [Lasso](https://pdfs.semanticscholar.org/6b5e/99c128b9cd7b7fbc817a2843a47ce8a1c35d.pdf) or [Elastic Net](https://web.stanford.edu/~hastie/Papers/B67.2%20(2005)%20301-320%20Zou%20&%20Hastie.pdf)
+
+### Cross test
+k-fold cross test is used with 10 folds.  
+```{r k-fold resampling, include=FALSE}
+# Specify the type of resampling
+fit_kfold <-
+    trainControl(method = 'cv',
+                 number = 10,
+                 returnResamp = "final")
+```
+
+### Linear regression
+The absolute value of the t-statistic for each model parameter is used to estimate the contribution of each variable to the model.  
+```{r Linear regression basic model}
+set.seed(50)
+training_dfs_list <-
+    list(training_set, training_set_nodot, training_set_noself)
+
+lmFit_kfold <- lapply(training_dfs_list, function(x)
+    train(
+        stai_trait_totalscore ~ . ,
+        data = x,
+        method = "lm",
+        trControl = fit_kfold))
+```
+
+#### Summaries
+##### All features
+```{r summary lm all features, echo=FALSE}
+summary(lmFit_kfold[1])
+```
+
+##### No dot probe
+```{r summary lm no dot probe, echo=FALSE}
+summary(lmFit_kfold[2])
+```
+
+##### No self-report questionnaires
+```{r summary lm no SR, echo=FALSE}
+summary(lmFit_kfold[3])
+```
+
+### Regularization regression methods
+[L1 and L2 regularization methods](https://towardsdatascience.com/l1-and-l2-regularization-methods-ce25e7fc831c) are used in Lasso, Ridge, and Elastic Net Regression. See a discussion of Ridge, Lasso, and Elastic Net Regularization [here.](http://www.sthda.com/english/articles/37-model-selection-essentials-in-r/153-penalized-regression-essentials-ridge-lasso-elastic-net/)  
+
+### Lasso
+Regularization can help prevent overfitting, which in our case is important due to the low n. ["The amount of the penalty can be fine-tuned using a constant called lambda (λ). Selecting a good value for λ is critical."](http://www.sthda.com/english/articles/37-model-selection-essentials-in-r/153-penalized-regression-essentials-ridge-lasso-elastic-net/)  
+
+```{r Lasso}
+# tuning parameters: Fraction of Full Solution (fraction, numeric)
+set.seed(50)
+lassoFit_kfold <- lapply(training_dfs_list, function(x)
+    train(
+        stai_trait_totalscore ~ . ,
+        data = x,
+        method = "lasso",
+        trControl = fit_kfold)) 
+```
+
+#### Summaries
+##### All features
+```{r lasso summary all, echo=FALSE}
+lassoFit_kfold[[1]]
+```
+
+#### No dot probe
+```{r lasso summary no dot, echo=FALSE}
+lassoFit_kfold[[2]]
+```
+
+#### No self-report questionnaires
+```{r lasso summary no SR, echo=FALSE}
+lassoFit_kfold[[3]]
+```
+
+#### Plots
+##### All features
+```{r plot lasso all features, echo=FALSE}
+trellis.par.set(caretTheme())
+ggplot(lassoFit_kfold[[1]])
+```
+
+##### No dot probe
+```{r plot lass not dot, echo=FALSE}
+ggplot(lassoFit_kfold[[2]])
+```
+
+##### No self-report questionnaires
+```{r plot lass not SR, echo=FALSE}
+ggplot(lassoFit_kfold[[3]])
+```
+
+### Elastic net
+["Elastic Net produces a regression model that is penalized with both the L1-norm and L2-norm. The consequence of this is to effectively shrink coefficients (like in ridge regression) and to set some coefficients to zero (as in LASSO)."](http://www.sthda.com/english/articles/37-model-selection-essentials-in-r/153-penalized-regression-essentials-ridge-lasso-elastic-net/) Because Lasso and Elastic Net shrink coefficient estimates with little contribution to zero, it can serve as an alternative to feature selection methods.  
+
+```{r elastic net}
+# Tuning parameters: Fraction of Full Solution (fraction, numeric) and Weight Decay (lambda, numeric)
+set.seed(50)
+
+enetFit_kfold <- lapply(training_dfs_list, function(x)
+    train(
+        stai_trait_totalscore ~ . ,
+        data = x,
+        method = "enet",
+        trControl = fit_kfold))
+```
+
+#### Summaries
+##### All features
+```{r enet summary all, echo=FALSE}
+enetFit_kfold[[1]]
+```
+
+##### No dot probe
+```{r enet summary nodot, echo=FALSE}
+enetFit_kfold[[2]]
+```
+
+##### No self-report questionnaires
+```{r enet summary SR, echo=FALSE}
+enetFit_kfold[[3]]
+```
+
+#### Plots
+##### All features
+```{r plot enet, echo=FALSE}
+trellis.par.set(caretTheme())
+ggplot(enetFit_kfold[[1]])
+```
+
+##### No dot probe
+```{r plot enet no dot, echo=FALSE}
+ggplot(enetFit_kfold[[2]])
+```
+
+##### No self-report questionnaires
+```{r plot enet no SR, echo=FALSE}
+ggplot(enetFit_kfold[[3]])
+```
+
+### Random Forest
+["Random Forest: from the R package: 'For each tree, the prediction accuracy on the out-of-bag portion of the data is recorded. Then the same is done after permuting each predictor variable. The difference between the two accuracies are then averaged over all trees, and normalized by the standard error. For regression, the MSE is computed on the out-of-bag data for each tree, and then the same computed after permuting a variable. The differences are averaged and normalized by the standard error. If the standard error is equal to 0 for a variable, the division is not done.'”](http://topepo.github.io/caret/variable-importance.html)
+
+```{r Random forest}
+set.seed(50)
+rfFit_kfold <- lapply(training_dfs_list, function(x)
+    train(
+        stai_trait_totalscore ~ .,
+        data = x,
+        method = 'rf',
+        trControl = fit_kfold))
+```
+
+#### Summaries
+##### All features
+```{r rf summary all, echo=FALSE}
+rfFit_kfold[[1]]
+```
+
+#### No dot probe
+```{r rf summary nodot, echo=FALSE}
+rfFit_kfold[[2]]
+```
+
+##### No self-report questionnaires
+```{r rf summary no SR, echo=FALSE}
+rfFit_kfold[[3]]
+```
+
+#### Plots
+##### All features
+```{r plot rf, echo=FALSE}
+trellis.par.set(caretTheme())
+ggplot(rfFit_kfold[[1]])
+```
+
+##### No dot probe
+```{r plot rf no dot probe, echo=FALSE}
+ggplot(rfFit_kfold[[2]])
+```
+
+##### No self-report questionnaires
+```{r plot rf no SR, echo=FALSE}
+ggplot(rfFit_kfold[[3]])
+```
+
+## Comparison of model performance on training set
+### Summaries
+```{r Model summaries comparison training set, echo=FALSE}
+# Resampling results
+resamps <- resamples(
+    list(
+        LM_all = lmFit_kfold[[1]],
+        LASSO_all = lassoFit_kfold[[1]],
+        ENET_all = enetFit_kfold[[1]],
+        RF_all = rfFit_kfold[[1]],
+        LM_nodot = lmFit_kfold[[2]],
+        LASSO_nodot = lassoFit_kfold[[2]],
+        ENET_nodot = enetFit_kfold[[2]],
+        RF_nodot = rfFit_kfold[[2]],
+        LM_noself = lmFit_kfold[[3]],
+        LASSO_noself = lassoFit_kfold[[3]],
+        ENET_noself = enetFit_kfold[[3]],
+        RF_noself = rfFit_kfold[[3]]))
+summary(resamps)
+```
+
+### Plots
+```{r plot model comparisons, echo=FALSE}
+trellis.par.set(theme1)
+bwplot(resamps, layout = c(3, 1))
+```
+
+### Difference table and plots
+```{r Model diff, echo=FALSE}
+difValues <- diff(resamps)
+summary(difValues)
+
+theme2 <- trellis.par.get()
+theme2$plot.symbol$col = rgb(.4, .4, .4, .8)
+theme2$plot.symbol$pch = 16
+theme2$plot.line$col = rgb(1, 0, 0, .7)
+theme2$plot.line$lwd <- 2
+theme2$fontsize$text <- 5
+trellis.par.set(theme2)
+bwplot(difValues, layout = c(3, 1))
+```
+
+## Model testing on test set
+<!-- ##### Linear regression -->
+```{r lm predict values in test from training model, include=FALSE}
+lm_predict <- predict(lmFit_kfold[[1]], test_set) 
+postResample(lm_predict, test_set$stai_trait_totalscore)
+```
+```{r lm predict values in test from training model no dot, include=FALSE}
+lm_predict_nodot <- predict(lmFit_kfold[[2]], test_set) 
+postResample(lm_predict_nodot, test_set$stai_trait_totalscore)
+```
+```{r lm predict values in test from training model no SR, include=FALSE}
+lm_predict_noself <- predict(lmFit_kfold[[3]], test_set) 
+postResample(lm_predict_noself, test_set$stai_trait_totalscore)
+```
+
+<!-- ##### Lasso -->
+```{r lasso predict values in test from training model, include=FALSE}
+set.seed(50)
+lasso_predict <- predict(lassoFit_kfold[[1]], test_set)
+postResample(lasso_predict, test_set$stai_trait_totalscore)
+```
+```{r lasso predict values in test from training model no dot, include=FALSE}
+lasso_predict_nodot <- predict(lassoFit_kfold[[2]], test_set)
+postResample(lasso_predict_nodot, test_set$stai_trait_totalscore)
+```
+```{r lasso predict values in test from training model no SR, include=FALSE}
+lasso_predict_noself <- predict(lassoFit_kfold[[3]], test_set)
+postResample(lasso_predict_noself, test_set$stai_trait_totalscore)
+```
+
+<!-- ##### Elastic net -->
+```{r enet predict all, include=FALSE}
+enet_predict <- predict(enetFit_kfold[[1]], test_set)
+postResample(enet_predict, test_set$stai_trait_totalscore)
+```
+```{r enet predict nodot, include=FALSE}
+enet_predict_nodot <- predict(enetFit_kfold[[2]], test_set)
+postResample(enet_predict_nodot, test_set$stai_trait_totalscore)
+```
+```{r enet predict noself, include=FALSE}
+enet_predict_noself <- predict(enetFit_kfold[[3]], test_set)
+postResample(enet_predict_noself, test_set$stai_trait_totalscore)
+```
+
+<!-- ##### Random forest -->
+```{r rf predict values in test from training model, include=FALSE}
+rf_predict <- predict(rfFit_kfold[[1]], test_set)
+postResample(rf_predict, test_set$stai_trait_totalscore)
+```
+```{r rf predict values in test from training model no dot, include=FALSE}
+rf_predict_nodot <- predict(rfFit_kfold[[2]], test_set)
+postResample(rf_predict_nodot, test_set$stai_trait_totalscore)
+```
+```{r rf predict values in test from training model no SR, include=FALSE}
+rf_predict_noself <- predict(rfFit_kfold[[3]], test_set)
+postResample(rf_predict_noself, test_set$stai_trait_totalscore)
+```
+
+### Comparison table of model performance on the training and test sets with all features
+```{r Model performance test set, echo=FALSE, warning=FALSE}
+RMSE_Training <- c(round(lmFit_kfold[[1]]$results[1,2], 2), 
+                   round(lassoFit_kfold[[1]]$results[1,2], 2), 
+                   round(enetFit_kfold[[1]]$results[1,3], 2), 
+                   round(rfFit_kfold[[1]]$results[1,2], 2))
+
+Rsq_Training <-  c(round(lmFit_kfold[[1]]$results[1,3], 2), 
+                   round(lassoFit_kfold[[1]]$results[1,3], 2), 
+                   round(enetFit_kfold[[1]]$results[1,4], 2), 
+                   round(rfFit_kfold[[1]]$results[1,3],2))
+
+RMSE_Test <- c(round(postResample(lm_predict, test_set$stai_trait_totalscore)[1], 2),
+               round(postResample(lasso_predict, test_set$stai_trait_totalscore)[1], 2),
+               round(postResample(enet_predict, test_set$stai_trait_totalscore)[1], 2),
+               round(postResample(rf_predict, test_set$stai_trait_totalscore)[1], 2))
+
+Rsq_Test <- c(round(postResample(lm_predict, test_set$stai_trait_totalscore)[2], 2), 
+              round(postResample(lasso_predict, test_set$stai_trait_totalscore )[2], 2), 
+              round(postResample(enet_predict, test_set$stai_trait_totalscore)[2], 2), 
+              round(postResample(rf_predict, test_set$stai_trait_totalscore)[2], 2))
+
+model_names <- c("Linear Regression", "Lasso", "Elastic Net", "Random Forest")
+
+difference_rmse <- as.numeric(RMSE_Test) - as.numeric(RMSE_Training)
+difference_rsq <- as.numeric(Rsq_Test) - as.numeric(Rsq_Training)
+
+knitr::kable(data.frame(
+    cbind(
+        model_names,
+        RMSE_Training,
+        Rsq_Training,
+        RMSE_Test,
+        Rsq_Test,
+        difference_rmse,
+        difference_rsq)), 
+    caption = 'Summary stats model performance all features', row.names = FALSE)
+```
+
+### Comparison table of model performance on the training and test sets without dot probe
+```{r Model performance test set no dot, echo=FALSE, warning=FALSE}
+RMSE_Training <- c(round(lmFit_kfold[[2]]$results[1,2], 2),
+                   round(lassoFit_kfold[[2]]$results[1,2], 2),
+                   round(enetFit_kfold[[2]]$results[1,3], 2),
+                   round(rfFit_kfold[[2]]$results[1,2], 2))
+
+Rsq_Training <-  c(round(lmFit_kfold[[2]]$results[1,3], 2), 
+                   round(lassoFit_kfold[[2]]$results[1,3], 2), 
+                   round(enetFit_kfold[[2]]$results[1,4], 2), 
+                   round(rfFit_kfold[[2]]$results[1,3],2))
+
+RMSE_Test <- c(round(postResample(lm_predict_nodot, test_set$stai_trait_totalscore)[1], 2),
+               round(postResample(lasso_predict_nodot, test_set$stai_trait_totalscore)[1], 2),
+               round(postResample(enet_predict_nodot, test_set$stai_trait_totalscore)[1], 2),
+               round(postResample(rf_predict_nodot, test_set$stai_trait_totalscore)[1], 2))
+
+Rsq_Test <- c(round(postResample(lm_predict_nodot, test_set$stai_trait_totalscore)[2], 2),
+              round(postResample(lasso_predict_nodot, test_set$stai_trait_totalscore )[2], 2),
+              round(postResample(enet_predict_nodot, test_set$stai_trait_totalscore)[2], 2),
+              round(postResample(rf_predict_nodot, test_set$stai_trait_totalscore)[2], 2))
+model_names <- c("Linear Regression", "Lasso", "Elastic Net", "Random Forest")
+
+difference_rmse <- as.numeric(RMSE_Test) - as.numeric(RMSE_Training)
+difference_rsq <- as.numeric(Rsq_Test) - as.numeric(Rsq_Training)
+
+knitr::kable(data.frame(
+    cbind(
+        model_names,
+        RMSE_Training,
+        Rsq_Training,
+        RMSE_Test,
+        Rsq_Test,
+        difference_rmse,
+        difference_rsq)), 
+    caption = 'Summary stats model performance no dot probe', row.names = FALSE)
+```
+
+### Comparison table of model performance on the training and test sets without self-report questionnaires
+```{r Model performance test set noself, echo=FALSE, warning=FALSE}
+RMSE_Training <- c(round(lmFit_kfold[[3]]$results[1,2], 2), 
+                   round(lassoFit_kfold[[3]]$results[1,2], 2), 
+                   round(enetFit_kfold[[3]]$results[1,3], 2), 
+                   round(rfFit_kfold[[3]]$results[1,2], 2))
+
+Rsq_Training <-  c(round(lmFit_kfold[[3]]$results[1,3], 2), round(lassoFit_kfold[[3]]$results[1,3], 2), round(enetFit_kfold[[3]]$results[1,4], 2), round(rfFit_kfold[[3]]$results[1,3],2))
+
+RMSE_Test <- c(round(postResample(lm_predict_noself, test_set$stai_trait_totalscore)[1], 2),
+               round(postResample(lasso_predict_noself, test_set$stai_trait_totalscore)[1], 2),
+               round(postResample(enet_predict_noself, test_set$stai_trait_totalscore)[1], 2),
+               round(postResample(rf_predict_noself, test_set$stai_trait_totalscore)[1], 2))
+
+Rsq_Test <- c(round(postResample(lm_predict_noself, test_set$stai_trait_totalscore)[2], 2), 
+              round(postResample(lasso_predict_noself, test_set$stai_trait_totalscore )[2], 2), 
+              round(postResample(enet_predict_noself, test_set$stai_trait_totalscore)[2], 2), 
+              round(postResample(rf_predict_noself, test_set$stai_trait_totalscore)[2], 2))
+model_names <- c("Linear Regression", "Lasso", "Elastic Net", "Random Forest")
+
+difference_rmse <- as.numeric(RMSE_Test) - as.numeric(RMSE_Training)
+difference_rsq <- as.numeric(Rsq_Test) - as.numeric(Rsq_Training)
+
+knitr::kable(data.frame(
+    cbind(
+        model_names,
+        RMSE_Training,
+        Rsq_Training,
+        RMSE_Test,
+        Rsq_Test,
+        difference_rmse,
+        difference_rsq)), 
+    caption = 'Summary stats model performance no self-report questionnaires', row.names = FALSE)
+```
+
+## Parameter tuning, all features
+### Lasso model tuning, all features
+```{r Tune Lasso}
+#lasso_info <- getModelInfo("lasso")
+#lasso_info$lasso$parameters
+tune_grid <- expand.grid(fraction = c(0.5, 0.6, 0.625, 0.65, 0.7, 0.725, 0.7, 0.8, 0.9))
+
+set.seed(50)
+lassoFit_tune <-
+    train(
+        stai_trait_totalscore ~ .,
+        data = training_set,
+        method = 'lasso',
+        trControl = fit_kfold,
+        tuneGrid = tune_grid)
+plot(lassoFit_tune)  
+```
+
+RMSE was used to select the optimal model using the smallest value. The final values used for the model were fraction = `r lassoFit_tune$bestTune$fraction`.  
+
+### Elastic Net model tuning, all features
+```{r Tune enet}
+set.seed(50)
+enetFit_tune <-
+    train(
+        stai_trait_totalscore ~ .,
+        data = training_set,
+        method = 'enet',
+        trControl = fit_kfold,
+        tuneLength = 20)
+trellis.par.set(caretTheme())
+plot(enetFit_tune)  
+```
+
+RMSE was used to select the optimal model using the smallest value. The final values used for the model were fraction = `r enetFit_tune$bestTune$fraction` and lambda = `r enetFit_tune$bestTune$lambda`.  
+
+### Random Forest model tuning, all features
+```{r Tune RF}
+#rf_info <- getModelInfo("rf")
+#rf_info$rf$parameters
+tune_grid <- expand.grid(mtry = c(5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16))
+
+set.seed(50)
+(rfFit_tune <- train(
+    stai_trait_totalscore ~ .,
+    data = training_set,
+    method = 'rf',
+    trControl = fit_kfold,
+    tuneGrid = tune_grid))
+```
+
+## All features: Post-tuning model testing on test set
+```{r lasso all, include=FALSE}
+lasso_predict2 <- predict(lassoFit_tune, test_set)
+postResample(lasso_predict2, test_set$stai_trait_totalscore)
+```
+```{r enet all, include=FALSE}
+enet_predict2 <- predict(enetFit_tune, test_set)
+postResample(enet_predict2, test_set$stai_trait_totalscore)
+```
+```{r rf all, include=FALSE}
+rf_predict2 <- predict(rfFit_tune, test_set)
+postResample(rf_predict2, test_set$stai_trait_totalscore)
+```
+
+```{r Second model comparison, echo=FALSE, warning=FALSE}
+RMSE_Training <- c(round(lmFit_kfold[[1]]$results[1,2], 2),
+                   round(lassoFit_kfold[[1]]$results[1,2], 2),
+                   round(enetFit_kfold[[1]]$results[1,3], 2),
+                   round(rfFit_kfold[[1]]$results[1,2], 2))
+
+Rsq_Training <-  c(round(lmFit_kfold[[1]]$results[1,3], 2),
+                   round(lassoFit_kfold[[1]]$results[1,3], 2),
+                   round(enetFit_kfold[[1]]$results[1,4], 2),
+                   round(rfFit_kfold[[1]]$results[1,3], 2))
+
+RMSE_Test1 <- c(round(postResample(lm_predict, test_set$stai_trait_totalscore)[1], 2),
+                round(postResample(lasso_predict, test_set$stai_trait_totalscore )[1], 2),
+                round(postResample(enet_predict, test_set$stai_trait_totalscore)[1], 2),
+                round(postResample(rf_predict, test_set$stai_trait_totalscore)[1], 2))
+
+Rsq_Test1 <- c(round(postResample(lm_predict, test_set$stai_trait_totalscore)[2], 2),
+               round(postResample(lasso_predict, test_set$stai_trait_totalscore )[2], 2),
+               round(postResample(enet_predict, test_set$stai_trait_totalscore)[2], 2),
+               round(postResample(rf_predict, test_set$stai_trait_totalscore)[2], 2))
+
+RMSE_Test2 <- c(NA, round(postResample(lasso_predict2, test_set$stai_trait_totalscore)[1], 2),
+                round(postResample(enet_predict2, test_set$stai_trait_totalscore)[1], 2),
+                round(postResample(rf_predict2, test_set$stai_trait_totalscore)[1], 2))
+
+Rsq_Test2 <- c(NA, round(postResample(lasso_predict2, test_set$stai_trait_totalscore)[2], 2),
+               round(postResample(enet_predict2, test_set$stai_trait_totalscore)[2], 2),
+               round(postResample(rf_predict2, test_set$stai_trait_totalscore)[2], 2))
+model_names <- c("Linear Regression", "Lasso", "Elastic Net", "Random Forest")
+
+difference_rmse_TV1 <- round((as.numeric(RMSE_Test) - as.numeric(RMSE_Training)), 2)
+difference_rsq_TV1 <- round((as.numeric(Rsq_Test) - as.numeric(Rsq_Training)), 2)
+
+difference_rmse_TV2 <- round((as.numeric(RMSE_Test2) - as.numeric(RMSE_Training)), 2)
+difference_rsq_TV2 <- round((as.numeric(Rsq_Test2) - as.numeric(Rsq_Training)), 2)
+
+difference_rmse_V1V2 <- round((as.numeric(RMSE_Test2) - as.numeric(RMSE_Test1)), 2)
+difference_rsq_V1V2 <- round((as.numeric(Rsq_Test2) - as.numeric(Rsq_Test1)), 2)
+
+knitr::kable(data.frame(
+    cbind(
+        model_names,
+        RMSE_Training,
+        RMSE_Test1,
+        difference_rmse_TV1,
+        RMSE_Test2,
+        difference_rmse_TV2,
+        difference_rmse_V1V2,
+        Rsq_Training,
+        Rsq_Test1,
+        difference_rsq_TV1,
+        Rsq_Test2,
+        difference_rsq_TV2,
+        difference_rsq_V1V2)), 
+    caption = 'Summary stats model performance all features', row.names = FALSE)
+```
+
+### Model difference estimates and p-values, all features
+```{r Model difference comparison, echo=FALSE}
+resamps <- resamples(
+    list(
+        LM = lmFit_kfold[[1]],
+        LASSO = lassoFit_kfold[[1]],
+        ENET = enetFit_kfold[[1]],
+        RF = rfFit_kfold[[1]],
+        LASSO_tune = lassoFit_tune,
+        ENET_tune = enetFit_tune,
+        RF_tune = rfFit_tune))
+summary(diff(resamps))
+```
+
+```{r plot untuned and tuned model difference comparison}
+trellis.par.set(theme1)
+bwplot(resamps, layout = c(3, 1))
+```
+
+## No dot probe: Parameter tuning
+### Lasso model tuning, no dot probe
+```{r Tune lasso nodot}
+tune_grid <- expand.grid(fraction = c(0.8, 0.825, 0.85, 0.875, 0.9, 0.925, 0.95, 0.975, 1))
+
+set.seed(50)
+lassoFit_tune_nodot <-
+    train(
+        stai_trait_totalscore ~ .,
+        data = training_set_nodot,
+        method = 'lasso',
+        trControl = fit_kfold,
+        tuneGrid = tune_grid)
+plot(lassoFit_tune_nodot)  
+```
+
+RMSE was used to select the optimal model using the smallest value. The final values used for the model were fraction = `r lassoFit_tune_nodot$bestTune$fraction`.  
+
+### Elastic Net model tuning, no dot probe
+```{r Tune enet nodot}
+set.seed(50)
+enetFit_tune_nodot <-
+    train(
+        stai_trait_totalscore ~ .,
+        data = training_set_nodot,
+        method = 'enet',
+        trControl = fit_kfold,
+        tuneLength = 20)
+trellis.par.set(caretTheme())
+plot(enetFit_tune_nodot)  
+```
+
+RMSE was used to select the optimal model using the smallest value. The final values used for the model were fraction = `r enetFit_tune_nodot$bestTune$fraction` and lambda = `r enetFit_tune_nodot$bestTune$lambda`.  
+
+### Random Forest model tuning, no dot probe
+```{r Tune RF nodot}
+tune_grid <- expand.grid(mtry = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+
+set.seed(50)
+(rfFit_tune_nodot <-
+        train(
+            stai_trait_totalscore ~ .,
+            data = training_set,
+            method = 'rf',
+            trControl = fit_kfold,
+            tuneGrid = tune_grid))
+```
+
+## No dot probe: Post-tuning model testing on test set
+```{r lasso nodot, include=FALSE}
+lasso_predict2_nodot <- predict(lassoFit_tune_nodot, test_set)
+postResample(lasso_predict2_nodot, test_set$stai_trait_totalscore)
+```
+```{r enet nodot, include=FALSE}
+enet_predict2_nodot <- predict(enetFit_tune_nodot, test_set)
+postResample(enet_predict2_nodot, test_set$stai_trait_totalscore)
+```
+```{r rf nodot, include=FALSE}
+rf_predict2_nodot <- predict(rfFit_tune_nodot, test_set)
+postResample(rf_predict2_nodot, test_set$stai_trait_totalscore)
+```
+```{r Second model comparison nodot, echo=FALSE, warning=FALSE}
+RMSE_Training <- c(round(lmFit_kfold[[2]]$results[1,2], 2),
+                   round(lassoFit_kfold[[2]]$results[1,2], 2),
+                   round(enetFit_kfold[[2]]$results[1,3], 2),
+                   round(rfFit_kfold[[2]]$results[1,2], 2))
+
+Rsq_Training <-  c(round(lmFit_kfold[[2]]$results[1,3], 2),
+                   round(lassoFit_kfold[[2]]$results[1,3], 2),
+                   round(enetFit_kfold[[2]]$results[1,4], 2),
+                   round(rfFit_kfold[[2]]$results[1,3], 2))
+
+RMSE_Test1 <- c(round(postResample(lm_predict_nodot, test_set$stai_trait_totalscore)[1], 2),
+                round(postResample(lasso_predict_nodot, test_set$stai_trait_totalscore )[1], 2),
+                round(postResample(enet_predict_nodot, test_set$stai_trait_totalscore)[1], 2),
+                round(postResample(rf_predict_nodot, test_set$stai_trait_totalscore)[1], 2))
+
+Rsq_Test1 <- c(round(postResample(lm_predict_nodot, test_set$stai_trait_totalscore)[2], 2),
+               round(postResample(lasso_predict_nodot, test_set$stai_trait_totalscore )[2], 2),
+               round(postResample(enet_predict_nodot, test_set$stai_trait_totalscore)[2], 2),
+               round(postResample(rf_predict_nodot, test_set$stai_trait_totalscore)[2], 2))
+
+RMSE_Test2 <- c(NA, round(postResample(lasso_predict2_nodot, test_set$stai_trait_totalscore)[1], 2),
+                round(postResample(enet_predict2_nodot, test_set$stai_trait_totalscore)[1], 2),
+                round(postResample(rf_predict2_nodot, test_set$stai_trait_totalscore)[1], 2))
+
+Rsq_Test2 <- c(NA, round(postResample(lasso_predict2_nodot, test_set$stai_trait_totalscore)[2], 2),
+               round(postResample(enet_predict2_nodot, test_set$stai_trait_totalscore)[2], 2),
+               round(postResample(rf_predict2_nodot, test_set$stai_trait_totalscore)[2], 2))
+model_names <- c("Linear Regression", "Lasso", "Elastic Net", "Random Forest")
+
+difference_rmse_TV1 <- round((as.numeric(RMSE_Test) - as.numeric(RMSE_Training)), 2)
+difference_rsq_TV1 <- round((as.numeric(Rsq_Test) - as.numeric(Rsq_Training)), 2)
+
+difference_rmse_TV2 <- round((as.numeric(RMSE_Test2) - as.numeric(RMSE_Training)), 2)
+difference_rsq_TV2 <- round((as.numeric(Rsq_Test2) - as.numeric(Rsq_Training)), 2)
+
+difference_rmse_V1V2 <- round((as.numeric(RMSE_Test2) - as.numeric(RMSE_Test1)), 2)
+difference_rsq_V1V2 <- round((as.numeric(Rsq_Test2) - as.numeric(Rsq_Test1)), 2)
+
+knitr::kable(data.frame(
+    cbind(
+        model_names,
+        RMSE_Training,
+        RMSE_Test1,
+        difference_rmse_TV1,
+        RMSE_Test2,
+        difference_rmse_TV2,
+        difference_rmse_V1V2,
+        Rsq_Training,
+        Rsq_Test1,
+        difference_rsq_TV1,
+        Rsq_Test2,
+        difference_rsq_TV2,
+        difference_rsq_V1V2)), 
+    caption = 'Comparison of model and difference scores: No dot probe', row.names = FALSE)
+```
+
+### Model difference estimates and p-values, no dot probe
+```{r Model difference comparison nodot, echo=FALSE}
+resamps <- resamples(
+    list(
+        LM = lmFit_kfold[[2]],
+        LASSO = lassoFit_kfold[[2]],
+        ENET = enetFit_kfold[[2]],
+        RF = rfFit_kfold[[2]],
+        LASSO_tune_nodot = lassoFit_tune_nodot,
+        ENET_tune_nodot = enetFit_tune_nodot,
+        RF_tune_nodot = rfFit_tune_nodot))
+summary(diff(resamps))
+```
+
+```{r plot untuned and tuned model difference comparison nodot, echo=FALSE}
+theme1 <- trellis.par.get()
+trellis.par.set(theme1)
+bwplot(resamps, layout = c(3, 1))
+```
+
+## No self-report: Parameter tuning
+### Lasso model tuning, no self-report questionnaires
+```{r Tune lasso noself}
+tune_grid <- expand.grid(fraction = c(0, 0.25, 0.5, 0.75, 0.1, 0.125, 0.15, 0.175, .2, .25, .3, .35, .4, .45, .5))
+
+set.seed(50)
+lassoFit_tune_noself <-
+    train(
+        stai_trait_totalscore ~ .,
+        data = training_set_noself,
+        method = 'lasso',
+        trControl = fit_kfold,
+        tuneGrid = tune_grid)
+plot(lassoFit_tune_noself)  
+```
+
+RMSE was used to select the optimal model using the smallest value. The final values used for the model were fraction = `r lassoFit_tune_noself$bestTune$fraction`.  
+
+### Elastic Net model tuning, no self-report questionnaires
+```{r Tune enet noself}
+set.seed(50)
+enetFit_tune_noself <-
+    train(
+        stai_trait_totalscore ~ .,
+        data = training_set_noself,
+        method = 'enet',
+        trControl = fit_kfold,
+        tuneLength = 20)
+trellis.par.set(caretTheme())
+plot(enetFit_tune_noself)  
+```
+
+RMSE was used to select the optimal model using the smallest value. The final values used for the model were fraction = `r enetFit_tune_noself$bestTune$fraction` and lambda = `r enetFit_tune_noself$bestTune$lambda`.  
+
+### Random Forest model tuning, no self-report questionnaires
+```{r Tune RF noself}
+tune_grid <- expand.grid(mtry = c(2, 3, 4, 5, 6, 7, 8))
+
+set.seed(50)
+(rfFit_tune_noself <-
+        train(
+            stai_trait_totalscore ~ .,
+            data = training_set_noself,
+            method = 'rf',
+            trControl = fit_kfold,
+            tuneGrid = tune_grid,
+            importance = TRUE))
+```
+
+## Post-tuning model testing on test set, no self-report questionnaires
+```{r lasso noself, include=FALSE}
+lasso_predict2_noself <- predict(lassoFit_tune_noself, test_set)
+postResample(lasso_predict2_noself, test_set$stai_trait_totalscore)
+```
+```{r enet noself, include=FALSE}
+enet_predict2_noself <- predict(enetFit_tune_noself, test_set)
+postResample(enet_predict2_noself, test_set$stai_trait_totalscore)
+```
+```{r RF noself, include=FALSE}
+rf_predict2_noself <- predict(rfFit_tune_noself, test_set)
+postResample(rf_predict2_noself, test_set$stai_trait_totalscore)
+```
+
+```{r Second model comparison noself, echo=FALSE, warning=FALSE}
+RMSE_Training <- c(round(lmFit_kfold[[3]]$results[1,2], 2),
+                   round(lassoFit_kfold[[3]]$results[1,2], 2),
+                   round(enetFit_kfold[[3]]$results[1,3], 2),
+                   round(rfFit_kfold[[3]]$results[1,2], 2))
+
+Rsq_Training <-  c(round(lmFit_kfold[[3]]$results[1,3], 2),
+                   round(lassoFit_kfold[[3]]$results[1,3], 2),
+                   round(enetFit_kfold[[3]]$results[1,4], 2),
+                   round(rfFit_kfold[[3]]$results[1,3], 2))
+
+RMSE_Test1 <- c(round(postResample(lm_predict_noself, test_set$stai_trait_totalscore)[1], 2),
+                round(postResample(lasso_predict_noself, test_set$stai_trait_totalscore )[1], 2),
+                round(postResample(enet_predict_noself, test_set$stai_trait_totalscore)[1], 2),
+                round(postResample(rf_predict_noself, test_set$stai_trait_totalscore)[1], 2))
+
+Rsq_Test1 <- c(round(postResample(lm_predict_noself, test_set$stai_trait_totalscore)[2], 2),
+               round(postResample(lasso_predict_noself, test_set$stai_trait_totalscore )[2], 2),
+               round(postResample(enet_predict_noself, test_set$stai_trait_totalscore)[2], 2),
+               round(postResample(rf_predict_noself, test_set$stai_trait_totalscore)[2], 2))
+
+RMSE_Test2 <- c(NA, round(postResample(lasso_predict2_noself, test_set$stai_trait_totalscore)[1], 2),
+                round(postResample(enet_predict2_noself, test_set$stai_trait_totalscore)[1], 2),
+                round(postResample(rf_predict2_noself, test_set$stai_trait_totalscore)[1], 2))
+
+Rsq_Test2 <- c(NA, round(postResample(lasso_predict2_noself, test_set$stai_trait_totalscore)[2], 2),
+               round(postResample(enet_predict2_noself, test_set$stai_trait_totalscore)[2], 2),
+               round(postResample(rf_predict2_noself, test_set$stai_trait_totalscore)[2], 2))
+model_names <- c("Linear Regression", "Lasso", "Elastic Net", "Random Forest")
+
+difference_rmse_TV1 <- round((as.numeric(RMSE_Test) - as.numeric(RMSE_Training)), 2)
+difference_rsq_TV1 <- round((as.numeric(Rsq_Test) - as.numeric(Rsq_Training)), 2)
+
+difference_rmse_TV2 <- round((as.numeric(RMSE_Test2) - as.numeric(RMSE_Training)), 2)
+difference_rsq_TV2 <- round((as.numeric(Rsq_Test2) - as.numeric(Rsq_Training)), 2)
+
+difference_rmse_V1V2 <- round((as.numeric(RMSE_Test2) - as.numeric(RMSE_Test1)), 2)
+difference_rsq_V1V2 <- round((as.numeric(Rsq_Test2) - as.numeric(Rsq_Test1)), 2)
+
+knitr::kable(data.frame(
+    cbind(
+    model_names,
+    RMSE_Training,
+    RMSE_Test1,
+    difference_rmse_TV1,
+    RMSE_Test2,
+    difference_rmse_TV2,
+    difference_rmse_V1V2,
+    Rsq_Training,
+    Rsq_Test1,
+    difference_rsq_TV1,
+    Rsq_Test2,
+    difference_rsq_TV2,
+    difference_rsq_V1V2)), 
+    caption = 'Model and difference scores during train and tune: no self-report', row.names = FALSE)
+```
+
+### Model difference estimates and p-values, no self-report questionnaires
+```{r Model difference comparison noself, echo=FALSE}
+resamps <- resamples(
+    list(
+    LM = lmFit_kfold[[3]],
+    LASSO = lassoFit_kfold[[3]],
+    ENET = enetFit_kfold[[3]],
+    RF = rfFit_kfold[[3]],
+    LASSO_tune_noself = lassoFit_tune_noself,
+    ENET_tune_noself = enetFit_tune_noself,
+    RF_tune_noself = rfFit_tune_noself))
+summary(diff(resamps))
+```
+```{r plot untuned and tuned model difference comparison noself, echo=FALSE}
+trellis.par.set(theme1)
+bwplot(resamps, layout = c(3, 1))
+```
+
+## Model performance comparison
+```{r Second model comparison varying features, echo=FALSE, warning=FALSE}
+RMSE_Training_all <- c(round(lmFit_kfold[[1]]$results[1,2], 2),
+                       round(lassoFit_kfold[[1]]$results[1,2], 2),
+                       round(enetFit_kfold[[1]]$results[1,3], 2),
+                       round(rfFit_kfold[[1]]$results[1,2], 2))
+Rsq_Training_all <-  c(round(lmFit_kfold[[1]]$results[1,3], 2),
+                       round(lassoFit_kfold[[1]]$results[1,3], 2),
+                       round(enetFit_kfold[[1]]$results[1,4], 2),
+                       round(rfFit_kfold[[1]]$results[1,3], 2))
+
+RMSE_Training_nodot <- c(round(lmFit_kfold[[2]]$results[1,2], 2),
+                         round(lassoFit_kfold[[2]]$results[1,2], 2),
+                         round(enetFit_kfold[[2]]$results[1,3], 2),
+                         round(rfFit_kfold[[2]]$results[1,2], 2))
+Rsq_Training_nodot <-  c(round(lmFit_kfold[[2]]$results[1,3], 2),
+                         round(lassoFit_kfold[[2]]$results[1,3], 2),
+                         round(enetFit_kfold[[2]]$results[1,4], 2),
+                         round(rfFit_kfold[[2]]$results[1,3], 2))
+
+RMSE_Training_noself <- c(round(lmFit_kfold[[3]]$results[1,2], 2),
+                          round(lassoFit_kfold[[3]]$results[1,2], 2),
+                          round(enetFit_kfold[[3]]$results[1,3], 2),
+                          round(rfFit_kfold[[3]]$results[1,2], 2))
+Rsq_Training_noself <-  c(round(lmFit_kfold[[3]]$results[1,3], 2),
+                          round(lassoFit_kfold[[3]]$results[1,3], 2),
+                          round(enetFit_kfold[[3]]$results[1,4], 2),
+                          round(rfFit_kfold[[3]]$results[1,3], 2))
+
+RMSE_Test_all <- c(NA, round(postResample(lasso_predict2, test_set$stai_trait_totalscore)[1], 2),
+                   round(postResample(enet_predict2, test_set$stai_trait_totalscore)[1], 2),
+                   round(postResample(rf_predict2, test_set$stai_trait_totalscore)[1], 2))
+RMSE_Test_nodot <- c(NA, round(postResample(lasso_predict2_nodot, test_set$stai_trait_totalscore)[1], 2),
+                     round(postResample(enet_predict2_nodot, test_set$stai_trait_totalscore)[1], 2),
+                     round(postResample(rf_predict2_nodot, test_set$stai_trait_totalscore)[1], 2))
+RMSE_Test_noself <- c(NA, round(postResample(lasso_predict2_noself, test_set$stai_trait_totalscore)[1], 2),
+                      round(postResample(enet_predict2_noself, test_set$stai_trait_totalscore)[1], 2),
+                      round(postResample(rf_predict2_noself, test_set$stai_trait_totalscore)[1], 2))
+
+Rsq_Test_all <- c(NA, round(postResample(lasso_predict2, test_set$stai_trait_totalscore)[2], 2),
+                  round(postResample(enet_predict2, test_set$stai_trait_totalscore)[2], 2),
+                  round(postResample(rf_predict2, test_set$stai_trait_totalscore)[2], 2))
+Rsq_Test_nodot <- c(NA, round(postResample(lasso_predict2_nodot, test_set$stai_trait_totalscore)[2], 2),
+                    round(postResample(enet_predict2_nodot, test_set$stai_trait_totalscore)[2], 2),
+                    round(postResample(rf_predict2_nodot, test_set$stai_trait_totalscore)[2], 2))
+Rsq_Test_noself <- c(NA, round(postResample(lasso_predict2_noself, test_set$stai_trait_totalscore)[2], 2),
+                     round(postResample(enet_predict2_noself, test_set$stai_trait_totalscore)[2], 2),
+                     round(postResample(rf_predict2_noself, test_set$stai_trait_totalscore)[2], 2))
+model_names <- c("Linear Regression", "Lasso", "Elastic Net", "Random Forest")
+
+difference_rmse_AvND <- round((as.numeric(RMSE_Test_all) - as.numeric(RMSE_Test_nodot)), 2)
+difference_rsq_AvND <- round((as.numeric(Rsq_Test_all) - as.numeric(Rsq_Test_nodot)), 2)
+
+difference_rmse_AvNS <- round((as.numeric(RMSE_Test_all) - as.numeric(RMSE_Test_noself)), 2)
+difference_rsq_AvNS <- round((as.numeric(Rsq_Test_all) - as.numeric(Rsq_Test_noself)), 2)
+
+difference_rmse_NDvNS <- round((as.numeric(RMSE_Test_nodot) - as.numeric(RMSE_Test_noself)), 2)
+difference_rsq_NDvNS <- round((as.numeric(Rsq_Test_nodot) - as.numeric(Rsq_Test_noself)), 2)
+
+knitr::kable(data.frame(
+    cbind(
+    model_names,
+    RMSE_Training_all,
+    Rsq_Training_all,
+    RMSE_Training_nodot,
+    Rsq_Training_nodot,
+    RMSE_Training_noself,
+    Rsq_Training_noself,
+    RMSE_Test_all,
+    RMSE_Test_nodot,
+    RMSE_Test_noself,
+    Rsq_Test_all,
+    Rsq_Test_nodot,
+    Rsq_Test_noself)),
+    caption = 'Summary model comparison varying included features', row.names = FALSE) 
+```
+
+## Pre-process holdout sample
+### Zero and near zero variance
+None of the variables exhibit zero or near-zero variance.  
+```{r Calculate variance metrics holdout sample, include=FALSE}
+# http://topepo.github.io/caret/pre-processing.html
+# Frequency ratio & % of unique values
+(nzv <- nearZeroVar(holdout_set, saveMetrics = TRUE))
+```
+
+### Linear dependencies
+```{r Linear dependency holdout sample, include=FALSE}
+# Identify linear combinations
+(comboInfo <- findLinearCombos(holdout_set))
+colnames(holdout_set[comboInfo$remove])
+
+# Remove linear dependencies
+holdout_set <- holdout_set[, -comboInfo$remove]
+```
+The following are linear combinations of other variables and are removed from the data set: `r colnames(holdout_set[comboInfo$remove])`  
+
+### Scale the data
+```{r scale data holdout}
+ind <- sapply(holdout_set, is.numeric)
+holdout_set[ind] <- lapply(holdout_set[ind], scale, scale = FALSE)
+holdout_set[ind] <- lapply(holdout_set[ind], as.numeric)
+```
+
+## Final model testing on the hold-out testing sample
+### Model with all features
+
+For the final model, the Lasso algorithm is selected with a fraction of `r lassoFit_tune$finalModel$tuneValue$fraction`.
+```{r Model performance testing on holdout, echo=FALSE}
+predictions_all <- predict(lassoFit_tune, holdout_set)
+```
+
+#### Summary of model performance
+["The function postResample can be used to estimate the root mean squared error (RMSE), simple R2, and the mean absolute error (MAE) for numeric outcomes."](http://topepo.github.io/caret/measuring-performance.html)
+```{r summary stats all features, echo=FALSE}
+summary_all <- postResample(predictions_all, holdout_set$stai_trait_totalscore)
+```
+```{r plot all feats v real, echo=FALSE}
+plot(x = predictions_all,
+     y = holdout_set$stai_trait_totalscore,
+     main = 'Predicted Using All Features v. Real STAI Trait values')
+```
+
+### Model without dot probe
+For the final model, the Lasso algorithm is selected with a fraction of `r lassoFit_tune_nodot$finalModel$tuneValue$fraction`.
+```{r Model performance testing on holdout nodot, echo=FALSE}
+predictions_nodot <- predict(lassoFit_tune_nodot, holdout_set)
+```
+
+#### Summary of model performance
+```{r summary stats nodot, echo=FALSE}
+(summary_nodot <-
+     postResample(predictions_nodot, holdout_set$stai_trait_totalscore))
+```
+```{r plot predict nodot v real, echo=FALSE}
+plot(x = predictions_nodot,
+     y = holdout_set$stai_trait_totalscore,
+     main = 'Predicted Without Dot Probe v. Real STAI Trait values')
+```
+
+### Model without self-report questionnaires
+For the final model, the Lasso algorithm is selected with a fraction of `r lassoFit_tune_noself$finalModel$tuneValue$fraction`.
+```{r Model performance testing on holdout noself, echo=FALSE}
+predictions_noself <- predict(lassoFit_tune_noself, holdout_set)
+```
+
+#### Summary of model performance
+```{r summary stats noself, echo=FALSE}
+(summary_noself <-
+     postResample(predictions_noself, holdout_set$stai_trait_totalscore))
+```
+```{r plot predict noself v real, echo=FALSE}
+plot(x = predictions_noself,
+     y = holdout_set$stai_trait_totalscore,
+     main = 'Predicted Without Self-Report Qs v. Real STAI Trait values')
+```
+
+## Final model comparison 
+```{r, echo=FALSE}
+model_names <- c(
+    'Lasso with all features',
+    'Lasso without dot probe measures',
+    'Lasso without self-report questionnaires')
+RMSE <- c(round(summary_all[[1]], 2),
+          round(summary_nodot[[1]], 2),
+          round(summary_noself[[1]], 2))
+Rsquared <- c(round(summary_all[[2]], 2),
+              round(summary_nodot[[2]], 2),
+              round(summary_noself[[2]], 2))
+MAE <- c(round(summary_all[3], 2),
+         round(summary_nodot[3], 2),
+         round(summary_noself[3], 2))
+knitr::kable(data.frame(cbind(model_names, RMSE, Rsquared, MAE)),
+             caption = 'Summary of Model Predictions With and Without Dot Probe or Self-Report Measures',
+             row.names = FALSE)
+```
+
+### Variable importance by model
+#### Lasso model with all features
+```{r Variable importance noself, echo=FALSE}
+lassoImp_all <- varImp(lassoFit_tune, scale = FALSE)
+plot(lassoImp_all, top = 20)
+```
+
+#### Lasso model without the dot probe
+```{r, echo=FALSE}
+lassoImp_nodot <- varImp(lassoFit_tune_nodot, scale = FALSE)
+plot(lassoImp_nodot, top = 20)
+```
+
+# Conclusion
+It is possible to predict trait anxiety scores as measured by the State-Trait Anxiety Inventory (STAI) with a high degree of accuracy using self-report measures. Using a lasso regularization regression model (fraction = `r lassoFit_tune$finalModel$tuneValue$fraction`), the prediction model performs well with self-report and demographic information. This model has an $R^{2}=`r round(summary_all[[2]], 2)`$ with an average deviation of predicted scores from real scores of $RMSE=`r round(summary_all[[1]], 2)`$ points on the STAI scale ($MAE=`r round(summary_all[[3]], 2)`$). Model fit is not improved significantly with inclusion of dot probe measures (fraction = `r lassoFit_tune_nodot$finalModel$tuneValue$fraction`; $RMSE=`r round(summary_nodot[[1]], 2)`; R^{2}=`r round(summary_nodot[[2]], 2)`; MAE=`r round(summary_nodot[[3]], 2)`$.  
+
+None of the models performed  well without inclusion of the self-report questionnaire data. After tuning, however, the lasso model only has an $R^2`r round(summary_noself[[2]], 2)`$ and $MAE=`r round(summary_noself[[3]], 2)`$. We may therefore conclude that self-report measures are the driving features in the prediction of trait anxiety.  
