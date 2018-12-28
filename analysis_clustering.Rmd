@@ -2,7 +2,10 @@
 title: 'Hunter College Data: Clustering Analysis'
 author: "Krista DeStasio"
 date: "11/06/2018"
-output: 
+output:
+  word_document:
+    toc: yes
+    toc_depth: '3'
   html_document:
     toc: yes
     toc_depth: 3
@@ -27,6 +30,7 @@ lapply(list.of.packages, library, character.only = TRUE)
 # Knit options
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
 # Feedback from demo
 **Suggestions**
 - if have really high error (if the groups don't generalize well training to test) then what's the plan. Going to use different clustering algorithm? (random walk? classification and regression tree?) Network analysis tutorial from data science.
@@ -36,13 +40,9 @@ knitr::opts_chunk$set(echo = TRUE)
     - [Gaussian mixtures](https://scikit-learn.org/stable/modules/mixture.html#mixture): **No. Soft clustering.**
     
 - What is the metric of how well it's doing?  
-    - Silhouette Coefficient
-    - Calinski-Harabaz Index
+    - Silhouette Coefficient (?)
+    - Calinski-Harabaz Index (?)
 - Identify ANOVA error term. See https://stats.idre.ucla.edu/other/mult-pkg/faq/general/faq-how-can-i-determine-the-correct-error-term-in-an-anova/
-
-
-# Purpose
-## Motivation
 
 *Tracy writes:* "As I see it our first goal is testing whether distinct attention bias grouping emerge from the dot probe and questionnaire data using classification algorithms. Once these groups are identified, we can look at whether these are treatment-relevant subgroups (i.e., ABMT training is more effective for one group versus the other)."  
 
@@ -54,7 +54,7 @@ A search for moderators that machine learning may be sensitive enough to detect.
 The primary aim of this analysis is to identify whether meaningful subgroups emerge from the anxiety dot probe. If meaningful subgroups do emerge, our secondary aim is to whether cluster membership relates to anxiety as measured by the State-Trait Anxiety Inventory (STAI). To test this aim, group membership will be entered as an independent variable into a between-subjects ANOVA with STAI trait anxiety scores as the dependent measure of interest. This is done with the eventual goal of predicting treatment trajectories in an unrelated sample of ABMT recipients.  
 
 ## Methods
-All analyses will be conducted using R (R Core Team, 2018). I will run both a spectral clustering analysis and a k means cluster analysis to identify subgroups within the Anxiety Dot Probe measures as these approaches are well suited to numeric data. Prior to any analysis, the data will be split into development (80%) and holdout (20%) sets, then the development set will be further split into training (70%) and testing (30%) sets. 
+All analyses will be conducted using R (R Core Team, 2018). I will run both a spectral clustering analysis (connectivity) and a k means cluster analysis (compactness) to identify subgroups within the Anxiety Dot Probe measures as these approaches are well suited to numeric data. Prior to any analysis, the data will be split into development (80%) and holdout (20%) sets, then the development set will be further split into training (70%) and testing (30%) sets. 
 
 
 Dot Probe measures that will be included in the analysis include:  
@@ -91,6 +91,7 @@ Development. The number of clusters to begin with will be decided by comparing t
 2. Decide if the outcome measure should be continuous, or binary yes/no based on some cut-off (e.g. clinical)? Or should both be tried?  
     - **Will do continuous linear analysis first, then a secondary analysis with clinical cut-off of anxiety scores**
     - Need to define clinical cut-off. **Ask Tracy what they use**
+        - STAI population mean of ~40 (go 1 standard deviation above population mean of 40)
 3. Decide which algorithm(s) to apply (k-means, PCA, other)?  
     - **K-means with the number of clusters selected via examination of the elbow in the sum of squared error (SSE) scree plot and via testing of different numbers of clusters through cross-validation**
     - **I will use the `kmeans()` function in `R`, using the `nstart` option as recommended [here](https://www.r-statistics.com/2013/08/k-means-clustering-from-r-in-action/), which attempts multiple initial configurations and reports on the best one.**  
