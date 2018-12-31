@@ -54,7 +54,7 @@ A search for moderators that machine learning may be sensitive enough to detect.
 The primary aim of this analysis is to identify whether meaningful subgroups emerge from the anxiety dot probe. If meaningful subgroups do emerge, our secondary aim is to whether cluster membership relates to anxiety as measured by the State-Trait Anxiety Inventory (STAI). To test this aim, group membership will be entered as an independent variable into a between-subjects ANOVA with STAI trait anxiety scores as the dependent measure of interest. This is done with the eventual goal of predicting treatment trajectories in an unrelated sample of ABMT recipients.  
 
 ## Methods
-All analyses will be conducted using R (R Core Team, 2018). I will run both a spectral clustering analysis (connectivity) and a k means cluster analysis (compactness) to identify subgroups within the Anxiety Dot Probe measures as these approaches are well suited to numeric data. Prior to any analysis, the data will be split into development (80%) and holdout (20%) sets, then the development set will be further split into training (70%) and testing (30%) sets. 
+All analyses will be conducted using R (R Core Team, 2018). I will run both a spectral clustering analysis (connectivity) and a k-means cluster analysis (compactness) to identify subgroups within the Anxiety Dot Probe measures as these approaches are well suited to numeric data. Prior to any analysis, the data will be split into development (80%) and holdout (20%) sets, then the development set will be further split into training (70%) and testing (30%) sets. 
 
 
 Dot Probe measures that will be included in the analysis include:  
@@ -75,7 +75,8 @@ Outliers were already removed from the data by our collaborators based on the pe
 The training, testing, and holdout sets will be independently preprocessed. The datasets will be checked for variables that are linear combinations of other variables and those indicated will be removed. Variables will be standardized using the `scale()` function to mean = 0, and standard deviation = 1.  
 
 ## K-Means Clustering Analysis
-Development. The number of clusters to begin with will be decided by comparing the results of several different methods:
+### Development
+The number of clusters to begin with will be decided by comparing the results of several different methods:
 
 - The sum of squared error (SSE) scree plot  
 - The `NbClust` function with method `kmeans`  
@@ -100,7 +101,7 @@ Development. The number of clusters to begin with will be decided by comparing t
     - [Methods for choosing the number of clusters](https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set)
     - Hierarchical clustering does not require knowing the number of clusters beforehand. Could be a good option.  
         -["a hierarchical cluster analysis was performed in order to determine the number of clusters for the K-means approach."](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4005932/)  
-4. Identify the components of the attention bias measures to use in clustering (attention bias measures just means various components of the dot probe, right? E.g. reaction time.)  
+4. Identify the components of the attention bias measures to use in clustering (E.g. reaction time.)  
     - **Will use those variables listed under "Available Dot Probe measures include:" that are not eliminated in pre-processing.**  
 5. Decide how to deal with missing  values.  
     - **Remove the row.**  
@@ -121,14 +122,17 @@ Available Dot Probe measures include:
 
 # Analysis Plan, Part 1: K-means Clustering
 ## 1. Data cleaning
+### Read in the data.  
+```{r}
+#data_matrix <- 
+```
 
-- Read in the data.  
 - Use `janitor` to make the dataset names a consistent format.  
 - Subset the data to retain only the dot probe measures (described above) and STAI Trait total score: `stai_trait_totalscore`  
 - Subset the data into the set that will be used for the cluster analysis (all variables except STAI score)  
 - There are no missing data as the dot probe measures exist for all participants who completed the task and who are included in this analysis. I therefore need not worry about biasing the results by omitting participants based on attention measures.  
 
-## 2. Split data into development and holout, then training and testing
+## 2. Split data into development and holdout, then training and testing
 
 - 80/20 development/holdout split of the full data set.  
 - 70/30 train/test split of the initial development set.  
@@ -139,7 +143,46 @@ Available Dot Probe measures include:
 - Standardize variables since they vary in range (if using more than just RT).  
     - Using the `scale()` function, variables are scaled to mean = 0, sd = 1.  
 
-## 4. K-means cluster analysis: development
+## 4. K-means cluster analysis
+### Development
+Run k-means with 1 through 6 clusters. Record the total within-cluster sum of squares for each iteration with a different cluster number. Plot as scatterplots and as a scree plot. Look for the elbow in the scree plot to determine the number of clusters to use.  
+
+```{r run kmeans}
+set.seed(50)
+
+# Initialize the total within sum of squares error
+wss <- 0
+
+for (i in 1:6) {
+    kmeans_out <- kmeans(data_matrix, centers = i, nstart = 20, iter.max = 50) 
+    wss[i] <- km.out$tot.withinss
+    
+    plot(x, col = kmeans_out$cluster, main = round(km.out$tot.withinss, 2), xlab = "", ylab = "")
+}
+
+# Scree plot
+plot(1:15, wss, type = "b", 
+     xlab = "Number of Clusters", 
+     ylab = "Within groups sum of squares")
+
+```
+
+Select the final model
+```{r examine kmeans results}
+# Number of clusters selected based on scree plot
+#k <- 
+kmeans_out <- kmeans(data_matrix, centers = k, nstart = 20) 
+
+# Plot the final model
+plot(data_matrix[, c("var1", "var2")],
+     col = km.out$cluster,
+     main = paste("k-means clustering of anxiety dot probe with", k, "clusters"),
+     xlab = "var1", ylab = "var2")
+```
+
+### Determining the number of clusters
+
+
 
 ### 4.a. Develop on the training data set  
 
