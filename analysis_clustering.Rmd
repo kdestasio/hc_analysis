@@ -3,6 +3,9 @@ title: 'Hunter College Data: Clustering Analysis'
 author: "Krista DeStasio"
 date: "11/06/2018"
 output:
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
   html_document:
     toc: yes
     toc_depth: 3
@@ -90,7 +93,7 @@ The dataset will be checked for variables that are linear combinations of other 
 
 **Read in the data **
 ```{r}
-data_matrix <- clean_names(readxl::read_excel()) # When ready to run, set to path_datafile
+data_matrix <- clean_names(readxl::read_excel(path_datafile)) # When ready to run, set to path_datafile
 # Subset dot probe measures
 data_matrix <- data_matrix[,c(3:14, 22)]
 data_matrix_aim1 <- subset(data_matrix, 
@@ -165,12 +168,12 @@ pca_var <- pca_scaled$sdev^2
 prop_var_each <- pca_var / sum(pca_var)
 
 # Plot the variance explained for each principal component
-plot(pca_var, xlab = "Principal Component",
+plot(prop_var_each, xlab = "Principal Component",
      ylab = "Proportion of Variance Explained",
      ylim = c(0,1), type = "b")
 
 # Plot cumulative proportion of variance explained
-plot(cumsum(pca_var), xlab = "Principal Component",
+plot(cumsum(prop_var_each), xlab = "Principal Component",
      ylab = "Proportion of Variance Explained",
      ylim = c(0,1), type = "b")
 ```
