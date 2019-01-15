@@ -3,13 +3,13 @@ title: 'Hunter College Data: Clustering Analysis'
 author: "Krista DeStasio"
 date: "11/06/2018"
 output:
-  pdf_document:
-    toc: yes
-    toc_depth: '3'
   html_document:
     toc: yes
     toc_depth: 3
     toc_float: no
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
   word_document:
     toc: yes
     toc_depth: '3'
@@ -25,13 +25,13 @@ path_datafile = paste0(working_dir, '/data/N=844_FINAL_Traditional metrics_Trial
 setwd(working_dir)
 
 # Install and load required packages
-list.of.packages <- c('janitor')
+list.of.packages <- c('janitor', 'kernlab')
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])] 
 if (length(new.packages)) install.packages(new.packages, repos = "http://cran.us.r-project.org")
 lapply(list.of.packages, library, character.only = TRUE)
 
 # Knit options
-knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE)
 ```
 
 # Background information  
@@ -92,10 +92,11 @@ The dataset will be checked for variables that are linear combinations of other 
 - There are no missing data as the dot probe measures exist for all participants who completed the task and who are included in this analysis. I therefore need not worry about biasing the results by omitting participants based on attention measures.  
 
 **Read in the data **
-```{r}
-data_matrix <- clean_names(readxl::read_excel(path_datafile)) # When ready to run, set to path_datafile
+```{r, include=FALSE}
+data_frame <- clean_names(readxl::read_excel(path_datafile)) # When ready to run, set to path_datafile
 # Subset dot probe measures
-data_matrix <- data_matrix[,c(3:14, 22)]
+data_matrix <- data_frame[,c(3:14, 22)]
+row.names(data_matrix) <- data_frame$subject_id
 data_matrix_aim1 <- subset(data_matrix, 
                            select = -c(threatbias_erlab, 
                                        vigilance_erlab, 
@@ -124,14 +125,14 @@ table(is.na(data_matrix_aim1))
 # Identify linear combinations
 (comboInfo = caret::findLinearCombos(data_matrix_aim1))
 # Display number of observations & features
-dim(abmt_data)
+dim(data_matrix_aim1)
 ```
 
 ### Normalization/Scaling
 
 Clustering is sensitive to data being on different scales of measurement. To deal with this, check whether any of the features differ in scale. To do so, check whether means and standard deviations vary across the features, and if yes, scale them. Using the `scale()` function, variables are scaled to mean = 0, sd = 1.  
 
-```{r normalization}
+```{r normalization, include=FALSE}
 colMeans(data_matrix_aim1) # means
 apply(data_matrix_aim1, 2, sd) # standard deviation for each column
 scaled_data <- scale(data_matrix_aim1) # scale the data
@@ -145,28 +146,25 @@ apply(scaled_data, 2, sd)
 **Purpose: prevent overfitting of the data and improve interpretability**
 
 ```{r PCA}
+set.seed(50)
 pca_scaled <- prcomp(x = scaled_data)
-
-# pca_scaled$center
-# pca_scaled$scale
-# pca_scaled$rotation  # the component of the loading vector for each feature
-
 summary(pca_scaled)
 ```
 
 ### Visualization
 #### Biplot
-```{r}
+```{r, echo=FALSE}
 # Biplot
 biplot(pca_scaled)
 ```
 
 #### Scree plot
-```{r}
+```{r, echo=FALSE}
 # Get the proportion of variance
 pca_var <- pca_scaled$sdev^2
 prop_var_each <- pca_var / sum(pca_var)
 
+par(mfrow = c(1,2)) 
 # Plot the variance explained for each principal component
 plot(prop_var_each, xlab = "Principal Component",
      ylab = "Proportion of Variance Explained",
@@ -174,28 +172,29 @@ plot(prop_var_each, xlab = "Principal Component",
 
 # Plot cumulative proportion of variance explained
 plot(cumsum(prop_var_each), xlab = "Principal Component",
-     ylab = "Proportion of Variance Explained",
+     ylab = "Cumulative Proportion of Variance Explained",
      ylim = c(0,1), type = "b")
 ```
 
 ### Conclusions from PCA
 
+Either 2 or 4 components is reasonable and explain 80% and 95% of the variance, respectively.  
 
 ## K-means cluster analysis
 ### Development
 Run k-means with 1 through 6 clusters. Record the total within-cluster sum of squares for each iteration with a different cluster number. Plot as scatterplots and as a scree plot. Look for the elbow in the scree plot to determine the number of clusters to use.  
 
-```{r run kmeans}
+```{r run kmeans, echo=FALSE, warning=FALSE}
 set.seed(50)
 
-# Initialize the total within sum of squares error
+# Initialize total within sum of squares error: wss
 wss <- 0
 
-for (i in 1:6) {
-    kmeans_out <- kmeans(pca_scaled$x[,], centers=2, centers = i, nstart = 20, iter.max = 50) 
-    wss[i] <- km_out$tot.withinss
-    
-    plot(x, col = kmeans_out$cluster, main = round(km_out$tot.withinss, 2), xlab = "", ylab = "")
+# For 1 to 15 cluster centers
+for (i in 1:15) {
+  km.out <- kmeans(pca_scaled$x[,1:2], centers = i, nstart = 20)
+  # Save total within sum of squares to wss variable
+  wss[i] <- km.out$tot.withinss
 }
 
 # Scree plot
@@ -207,33 +206,48 @@ plot(1:15, wss, type = "b",
 
 Select the final model
 ```{r examine kmeans results}
-# Number of clusters selected based on scree plot
-#k <- 
-
+set.seed(50)
+# Set k equal to the number of clusters corresponding to the elbow location
+k <- 2
 # fill in `pca_scaled$x[, : ]` with the number of clusters decided upon based on the PCA
-kmeans_out_pca <- kmeans(pca$x[,:], centers = k, nstart = 20) 
-
-kmeans_out <- kmeans(scaled_data, centers = k, nstart = 20) 
-
+kmeans_out_pca <- kmeans(pca_scaled$x[,1:2], centers = 2, nstart = 20) 
+```
+```{r, echo=FALSE}
+par(mfrow = c(1,2)) 
 # Plot the final model
-plot(scaled_data[, c("var1", "var2")],
-     col = km_out$cluster,
-     main = paste("k-means clustering of anxiety dot probe with", k, "clusters"),
+plot(pca_scaled$x[,1:2],
+     col = kmeans_out_pca$cluster,
+     main = paste("k-means clustering,\nanxiety dot probe with", k, "clusters \nscaled data"),
+     xlab = "var1", ylab = "var2")
+plot(scaled_data,
+     col = kmeans_out_pca$cluster,
+     main = paste("k-means clustering,\n anxiety dot probe with", k, "clusters"),
      xlab = "var1", ylab = "var2")
 ```
-
 
 
 - Evaluate cluster solution performance  
     - ["Since the centroids provided by the function are based on standardized data, the `aggregate()` function is used along with the cluster memberships to determine variable means for each cluster in the original metric."](https://www.r-statistics.com/2013/08/k-means-clustering-from-r-in-action/)  
     
+```{r, echo=FALSE}
+# Variable means  
+aggregate(scaled_data, by = list(cluster = kmeans_out_pca$cluster), mean)
+```
+
 ## Spectral Clustering
 ```{r}
-library(kernlab)
+set.seed(50)
+spec_clust <- specc(pca_scaled$x[,1:2], centers = k) 
+```
 
-spec_clust <- specc(scaled_data, centers = k) 
-plot(scaled_data, col = spec_clust, pch = 4)  # estimated classes (x)
-points(scaled_data, col = obj$classes, pch = 5) # true classes (<>)
+```{r, echo=FALSE}
+par(mfrow = c(1,2)) 
+plot(pca_scaled$x[,1:2], col = spec_clust, pch = 4)  # estimated classes
+plot(scaled_data, col = spec_clust, pch = 4)  # estimated classes
+```
+
+```{r, echo=FALSE}
+aggregate(scaled_data, by = list(cluster = spec_clust), mean)
 ```
 
 ## Hierarchical clustering
@@ -241,8 +255,6 @@ points(scaled_data, col = obj$classes, pch = 5) # true classes (<>)
 - `hclust()` function  
 
  Used when the number of clusters is not known ahead of time. There's top-down and bottom-up clustering. I will be using bottom-up clustering, which starts by assigning each point to it's own cluster, then iteratively combines them into fewer clusters based on distance between them until there's only 1 cluster. There are multiple ways to calculate the distance between observations. I will use euclidean distance. 
- 
-### Development
 
 Create the first hierarchical clustering model.  
 
@@ -253,26 +265,52 @@ To determine the distance between clusters, one of 4 methods can be used:
  (4) *Centroid* - centroid of cluster 1 is calculated, centroid of cluster 2 is calculated and the distance between the 2 centroids is used.  
  
 Complete and average tend to produce more balanced trees and are the most common.  
- 
+
+### Development
 ```{r hierarchical clustering}
+set.seed(50)
 # Need to use a dissimilarity structure with hclust()
-# fill in `pca_scaled$x[, : ]` with the number of clusters decided upon based on the PCA
-hclust_out_c <- hclust(dist(pca_scaled$x[, : ], method = "euclidean"), method = 'complete') 
-hclust_out_a <- hclust(dist(pca_scaled$x[,:], method = "euclidean"), method = 'average')
-summary(hclust_out_c)
-summary(hclust_out_a)
+hclust_complete <- hclust(dist(scaled_data, method = "euclidean"), method = 'complete') 
+hclust_average <- hclust(dist(scaled_data, method = "euclidean"), method = 'average')
 ```
 
-### Interpretation
-#### Dendrogram plot
+### Dendrogram plot
 
 Determine the number of clusters wanted in the model. This is doen by specifying the height of the cut-off point in the dendrogram.
  
-```{r}
-plot(hclust_out)
-# + abline(h = 6, col = 'red')
-hclust_clusters <- cutree(hclust_out, ) # use either the h parameter (height) or number of clusters desired (k parameter) to select where to cut the dendrogram
+```{r, echo=FALSE}
+#par(mfrow = c(1,2)) 
+plot(hclust_complete, main = "Complete Linkage")
+#plot(hclust_average, main = "Average Linkage")
+hclust_complete_clusters <- cutree(hclust_average, k = 3)
+#hclust_average_clusters <- cutree(hclust_average, k = 3)
 ```
+
+Despite placing the cut at 3 clusters, it's really 2 since one cluster resulting from the first split has only one data point in.  
+
+## Compare models
+```{r, echo=FALSE}
+table(kmeans_out_pca$cluster, hclust_complete_clusters)
+table(spec_clust, hclust_complete_clusters)
+table(spec_clust, kmeans_out_pca$cluster)
+```
+
+```{r, echo=FALSE}
+knitr::kable(aggregate(scaled_data, 
+                       by = list(cluster = kmeans_out_pca$cluster), 
+                       mean), 
+             caption = "K-means Clustering Means")
+knitr::kable(aggregate(scaled_data, 
+                       by = list(cluster = spec_clust), 
+                       mean), 
+             caption = "Spectral Clustering Means")
+knitr::kable(aggregate(scaled_data, 
+                       by = list(cluster = hclust_complete_clusters), 
+                       mean),
+             caption = "Hierarchical Clustering Means")
+```
+
+
 
     
 # Analysis Plan, Aim 2: Between-subject analysis of variance (ANOVA) 
