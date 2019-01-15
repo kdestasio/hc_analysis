@@ -40,13 +40,24 @@ knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 A search for moderators that machine learning may be sensitive enough to detect.  
 
 ## Introduction
-The primary aim of this analysis is to identify whether meaningful subgroups emerge from the anxiety dot probe. If meaningful subgroups do emerge, our secondary aim is to whether cluster membership relates to anxiety as measured by the State-Trait Anxiety Inventory (STAI). To test this aim, group membership will be entered as an independent variable into a between-subjects ANOVA with STAI trait anxiety scores as the dependent measure of interest. This is done with the eventual goal of predicting treatment trajectories in an unrelated sample of ABMT recipients.  
+All analyses will be conducted using R (R Core Team, 2018). 
 
-## Methods
-All analyses will be conducted using R (R Core Team, 2018). I will run both a spectral clustering analysis (connectivity) and a k-means cluster analysis (compactness) to identify subgroups within the Anxiety Dot Probe measures as these approaches are well suited to numeric data. Hierarchical clustering methods, which do not require a priori specification of number of clusters,  will also be applied and evaluated. Prior to any analysis, the data will be split into development (80%) and holdout (20%) sets, then the development set will be further split into training (70%) and testing (30%) sets. 
+
+**Aim 1** is to identify whether meaningful subgroups emerge from the anxiety dot probe. I will compare the outcomes of a spectral clustering analysis (connectivity), a k-means cluster analysis (compactness), and a hierarchical clustering analysis to identify subgroups within the Anxiety Dot Probe measures as these approaches are well suited to numeric data. Hierarchical clustering methods, in contrast to k-means and spectral clustering, does not require a priori specification of number of clusters. Prior to clustering, dimension reduction will be done with principal components analysis to decresase overfitting and to make the models more inerpretable. The final solution will be selected based on visual inspection of the cluster outcomes, and based on the SSE for each solution. 
+
+This analysis is done with the eventual goal of predicting treatment trajectories in an unrelated sample of Attention Bias Modification Training (ABMT) recipients. In that analysis, we will test whether cluster membership can predict the efficacy of ABMT (toward or away from threat) as measured by a post-ABMT re-application of the anxiety dot-probe.  
+
+**Aim 2** is to test the hypothesis that bias toward threat during the anxiety dot probe correlates with greater trait anxiety as measured by State-Trait Anxiety Inventory (STAI) scores. To test this aim, I will run two separate analyses. The first is a linear regression with three threat bias scores entered as covariates: (1) threat bias ("average RTs for neutral probes in TN trials minus RTs for angry probes in TN trials"), (2) vigilance ("average RTs for neutral probes in NN trials minus RTs for angry probes in TN trials"), and (3) disengagement ("average RTs for neutral probes on TN trials minus RTs for neutral probes on NN trials").
+
+`aov(STAI_anxiety ~ threat_bias*vigilance*disengagement)`
+
+Second, I will test whether group membership, derived from the Aim 1 analysis, predicts STAI trait anxiety. Group membership will be entered as an independent variable into a between-subjects ANOVA with STAI trait anxiety scores as the dependent measure of interest. 
+
+`aov(STAI_anxiety ~ cluster_groups + Error(subject/cluster_groups), data=full_dataset)`
+ 
 
 ## The data  
-Dot Probe measures that will be included in the analysis are:  
+Dot Probe measures that will be included in the clustering analysis are:  
 
 - `rt_neutral_nt`: Average RT on all neutral trials  
 - `rt_threat_nt`: Average RT on all threat trials  
@@ -58,15 +69,20 @@ Dot Probe measures that will be included in the analysis are:
 - `peak_neg`: highest negative trial-level threat bias score           
 - `variability`: absolute value of the distance across all trial-level threat bias scores / number of pairs
 
+Variables for the regression analysis (Aim 2):  
+- `threatbias_ERLAB`
+- `vigilance_ERLAB`
+- `disengage_ERLAB`
+
 ## Data preprocessing 
 ### Outliers and missingness
 Outliers were already removed from the data by our collaborators based on the percentage of trials that were answered correctly. Participants with an accuracy of .80 or greater are included in the dataset. There should be no initial missing data for the dot probe measures as the included metrics can be computed for anyone who completed the task.
 
 ### Colinearity and transformation
-The training, testing, and holdout sets will be independently preprocessed. The datasets will be checked for variables that are linear combinations of other variables and those indicated will be removed. Variables will be standardized using the `scale()` function to mean = 0, and standard deviation = 1.  
+The dataset will be checked for variables that are linear combinations of other variables and those indicated will be removed. Variables will be standardized using the `scale()` function to mean = 0, and standard deviation = 1.  
 
 
-# Planned analyses  
+# Planned analyses
 ## K-Means Clustering Analysis
 ### Development
 The number of clusters to begin with will be decided by comparing the results of several different methods:
@@ -80,55 +96,105 @@ The number of clusters to begin with will be decided by comparing the results of
 - A number of different clustering solutions will be tried by using cross-validation
 - An importnat note about k-means is that ["it can only detect compact, hyperspherical clusters that are well separated."](https://www.sciencedirect.com/science/article/pii/S0957417412008767)  
 
-## Hierarchical clustering
-
-- `hclust()` function  
-
-
-# Decision points to address in the pre-registration 
-**Decisions in bold**
-
-1. Decide whether the outcome measure (anxiety) be STAI trait anxiety, or the STAI total score?  
-    - **Trait anxiety**
-2. Decide if the outcome measure should be continuous, or binary yes/no based on some cut-off (e.g. clinical)? Or should both be tried?  
-    - **Will do continuous linear analysis first, then a secondary analysis with clinical cut-off of anxiety scores**
-    - Need to define clinical cut-off. **Ask Tracy what they use**
-        - STAI population mean of ~40 (go 1 standard deviation above population mean of 40)
-3. General notes 
-    - ["Clustering is more of a tool to help you explore a dataset, and should not always be used as an automatic method to classify data. Hence, you may not always deploy a clustering algorithm for real-world production scenario. They are often too unreliable, and a single clustering alone will not be able to give you all the information you can extract from a dataset."](https://www.datacamp.com/community/tutorials/k-means-clustering-r)  
-    - [Methods for choosing the number of clusters](https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set)
-    - Hierarchical clustering does not require knowing the number of clusters beforehand. Could be a good option.  
-        -["a hierarchical cluster analysis was performed in order to determine the number of clusters for the K-means approach."](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4005932/)  
-
 # Code
 ## Data cleaning
-### Read in the data.  
-```{r}
-#data_matrix <- 
-```
 
 - Use `janitor` to make the dataset names a consistent format.  
-- Subset the data to retain only the dot probe measures (described above) and STAI Trait total score: `stai_trait_totalscore`  
 - Subset the data into the set that will be used for the cluster analysis (all variables except STAI score)  
 - There are no missing data as the dot probe measures exist for all participants who completed the task and who are included in this analysis. I therefore need not worry about biasing the results by omitting participants based on attention measures.  
 
-## Data partitioning  
-Split data into development and holdout, then training and testing
+**Read in the data **
+```{r}
+data_matrix <- clean_names(readxl::read_excel()) # When ready to run, set to path_datafile
+# Subset dot probe measures
+data_matrix <- data_matrix[,c(3:14, 22)]
+data_matrix_aim1 <- subset(data_matrix, 
+                           select = -c(threatbias_erlab, 
+                                       vigilance_erlab, 
+                                       disengage_erlab, 
+                                       stai_trait_totalscore))
+data_matrix_aim2 <- subset(data_matrix, 
+                           select = c(threatbias_erlab, 
+                                      vigilance_erlab, 
+                                      disengage_erlab, 
+                                      stai_trait_totalscore))
+# Any missing data?
+table(is.na(data_matrix_aim1))
+```
 
-- 80/20 development/holdout split of the full data set.  
-- 70/30 train/test split of the initial development set.  
+## Pre-processing   
+### Zero and near zero variance  
 
-## Pre-processing  
-Preprocess the train/test sets
+```{r Calculate variance metrics, include=FALSE}
+# http://topepo.github.io/caret/pre-processing.html
+# Frequency ratio & % of unique values
+(nzv = caret::nearZeroVar(data_matrix_aim1, saveMetrics = TRUE))
+```
 
-- Check for and remove variables that are linear combinations of other variables.  
-- Standardize variables since they vary in range (if using more than just RT).  
-    - Using the `scale()` function, variables are scaled to mean = 0, sd = 1.  
+### Linear dependencies
+```{r Linear dependency, include=FALSE}
+# Identify linear combinations
+(comboInfo = caret::findLinearCombos(data_matrix_aim1))
+# Display number of observations & features
+dim(abmt_data)
+```
+
+### Normalization/Scaling
+
+Clustering is sensitive to data being on different scales of measurement. To deal with this, check whether any of the features differ in scale. To do so, check whether means and standard deviations vary across the features, and if yes, scale them. Using the `scale()` function, variables are scaled to mean = 0, sd = 1.  
+
+```{r normalization}
+colMeans(data_matrix_aim1) # means
+apply(data_matrix_aim1, 2, sd) # standard deviation for each column
+scaled_data <- scale(data_matrix_aim1) # scale the data
+
+# Check that the data are scaled
+round(colMeans(scaled_data), 2)
+apply(scaled_data, 2, sd)
+```
+
+## Dimensionality reduction, Principal Components Analysis  
+**Purpose: prevent overfitting of the data and improve interpretability**
+
+```{r PCA}
+pca_scaled <- prcomp(x = scaled_data)
+
+# pca_scaled$center
+# pca_scaled$scale
+# pca_scaled$rotation  # the component of the loading vector for each feature
+
+summary(pca_scaled)
+```
+
+### Visualization
+#### Biplot
+```{r}
+# Biplot
+biplot(pca_scaled)
+```
+
+#### Scree plot
+```{r}
+# Get the proportion of variance
+pca_var <- pca_scaled$sdev^2
+prop_var_each <- pca_var / sum(pca_var)
+
+# Plot the variance explained for each principal component
+plot(pca_var, xlab = "Principal Component",
+     ylab = "Proportion of Variance Explained",
+     ylim = c(0,1), type = "b")
+
+# Plot cumulative proportion of variance explained
+plot(cumsum(pca_var), xlab = "Principal Component",
+     ylab = "Proportion of Variance Explained",
+     ylim = c(0,1), type = "b")
+```
+
+### Conclusions from PCA
 
 
-## Clustering algorithms
-### K-means cluster analysis
-#### Development
+## K-means cluster analysis
+### Development
 Run k-means with 1 through 6 clusters. Record the total within-cluster sum of squares for each iteration with a different cluster number. Plot as scatterplots and as a scree plot. Look for the elbow in the scree plot to determine the number of clusters to use.  
 
 ```{r run kmeans}
@@ -138,7 +204,7 @@ set.seed(50)
 wss <- 0
 
 for (i in 1:6) {
-    kmeans_out <- kmeans(data_matrix, centers = i, nstart = 20, iter.max = 50) 
+    kmeans_out <- kmeans(pca_scaled$x[,], centers=2, centers = i, nstart = 20, iter.max = 50) 
     wss[i] <- km_out$tot.withinss
     
     plot(x, col = kmeans_out$cluster, main = round(km_out$tot.withinss, 2), xlab = "", ylab = "")
@@ -155,43 +221,87 @@ Select the final model
 ```{r examine kmeans results}
 # Number of clusters selected based on scree plot
 #k <- 
-kmeans_out <- kmeans(data_matrix, centers = k, nstart = 20) 
+
+# fill in `pca_scaled$x[, : ]` with the number of clusters decided upon based on the PCA
+kmeans_out_pca <- kmeans(pca$x[,:], centers = k, nstart = 20) 
+
+kmeans_out <- kmeans(scaled_data, centers = k, nstart = 20) 
 
 # Plot the final model
-plot(data_matrix[, c("var1", "var2")],
+plot(scaled_data[, c("var1", "var2")],
      col = km_out$cluster,
      main = paste("k-means clustering of anxiety dot probe with", k, "clusters"),
      xlab = "var1", ylab = "var2")
 ```
 
-Identify the number of clusters 
 
-#### Apply the solution to the test data set  
 
-- Repeat the above train/test steps until a satisfactory solution is reached.  
-
-#### Finalize the k-means model  
-
-Pre-processing of the holdout data set
-
-- Check for and remove variables that are linear combinations of other variables.  
-- Standardize variables since they vary in range so they have mean = 0, sd = 1.  
-
-#### Apply the k-means model  
-Apply the finalized cluster analysis to the holdout data set  
-
-- Evaluate cluster solution performance on the independent holdout data.  
+- Evaluate cluster solution performance  
     - ["Since the centroids provided by the function are based on standardized data, the `aggregate()` function is used along with the cluster memberships to determine variable means for each cluster in the original metric."](https://www.r-statistics.com/2013/08/k-means-clustering-from-r-in-action/)  
     
+## Spectral Clustering
+```{r}
+library(kernlab)
+
+spec_clust <- specc(scaled_data, centers = k) 
+plot(scaled_data, col = spec_clust, pch = 4)  # estimated classes (x)
+points(scaled_data, col = obj$classes, pch = 5) # true classes (<>)
+```
+
+## Hierarchical clustering
+
+- `hclust()` function  
+
+ Used when the number of clusters is not known ahead of time. There's top-down and bottom-up clustering. I will be using bottom-up clustering, which starts by assigning each point to it's own cluster, then iteratively combines them into fewer clusters based on distance between them until there's only 1 cluster. There are multiple ways to calculate the distance between observations. I will use euclidean distance. 
+ 
+### Development
+
+Create the first hierarchical clustering model.  
+
+To determine the distance between clusters, one of 4 methods can be used:  
+ (1) *Complete* - measures pairwaise similarity between clusters and uses the largest.  
+ (2) *Single* - same as above, but uses smallest of similarities.  
+ (3) *Average* - same as above, but uses average of similarities.  
+ (4) *Centroid* - centroid of cluster 1 is calculated, centroid of cluster 2 is calculated and the distance between the 2 centroids is used.  
+ 
+Complete and average tend to produce more balanced trees and are the most common.  
+ 
+```{r hierarchical clustering}
+# Need to use a dissimilarity structure with hclust()
+# fill in `pca_scaled$x[, : ]` with the number of clusters decided upon based on the PCA
+hclust_out_c <- hclust(dist(pca_scaled$x[, : ], method = "euclidean"), method = 'complete') 
+hclust_out_a <- hclust(dist(pca_scaled$x[,:], method = "euclidean"), method = 'average')
+summary(hclust_out_c)
+summary(hclust_out_a)
+```
+
+### Interpretation
+#### Dendrogram plot
+
+Determine the number of clusters wanted in the model. This is doen by specifying the height of the cut-off point in the dendrogram.
+ 
+```{r}
+plot(hclust_out)
+# + abline(h = 6, col = 'red')
+hclust_clusters <- cutree(hclust_out, ) # use either the h parameter (height) or number of clusters desired (k parameter) to select where to cut the dendrogram
+```
+
+ 
+
     
     
     
     
     
-    
-    
-# Analysis Plan, Part 2: Between-subject analysis of variance (ANOVA) 
-Do this, or not?
+# Analysis Plan, Aim 2: Between-subject analysis of variance (ANOVA) 
+This doesn't need to be done right away. Will do cluster analysis first & send to HC, then get to this.
+
+1. Decide whether the outcome measure (anxiety) be STAI trait anxiety, or the STAI total score?  
+    - **Trait anxiety**
+2. Decide if the outcome measure should be continuous, or binary yes/no based on some cut-off (e.g. clinical)? Or should both be tried?  
+    - **Will do continuous linear analysis first, then a secondary analysis with clinical cut-off of anxiety scores**
+    - Need to define clinical cut-off. **Ask Tracy what they use**
+        - STAI population mean of ~40 (go 1 standard deviation above population mean of 40)
 
 - Use the data frame of dot probe measures and STAI Trait total score: `stai_trait_totalscore`  
 - Remove rows with missing values on the `stai_trait_totalscore` using `na.omit()`  
@@ -202,7 +312,11 @@ Do this, or not?
 
 
 
-
+# General notes 
+    - ["Clustering is more of a tool to help you explore a dataset, and should not always be used as an automatic method to classify data. Hence, you may not always deploy a clustering algorithm for real-world production scenario. They are often too unreliable, and a single clustering alone will not be able to give you all the information you can extract from a dataset."](https://www.datacamp.com/community/tutorials/k-means-clustering-r)  
+    - [Methods for choosing the number of clusters](https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set)
+    - Hierarchical clustering does not require knowing the number of clusters beforehand. Could be a good option.  
+        -["a hierarchical cluster analysis was performed in order to determine the number of clusters for the K-means approach."](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4005932/)  
 
 
     
@@ -217,3 +331,4 @@ Do this, or not?
 - [Spectral clustering R implementation](https://rpubs.com/nurakawa/spectral-clustering)
 - [Drawbacks of K mean clustering](https://stats.stackexchange.com/questions/133656/how-to-understand-the-drawbacks-of-k-means)
 - [Alternatives for segmenting noisy data](https://www.datascience.com/blog/k-means-alternatives)
+
