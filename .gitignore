@@ -3,5 +3,7 @@ preregistration_clustering.docx
 **/.DS_Store
 data/
 *.html
+*.docx
+*.pdf
 .Rhistory
 
