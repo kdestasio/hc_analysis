@@ -69,10 +69,10 @@ Dot Probe measures that will be included in the clustering analysis are:
 - `peak_neg`: highest negative trial-level threat bias score           
 - `variability`: absolute value of the distance across all trial-level threat bias scores / number of pairs
 
-Variables for the regression analysis (Aim 2):  
-- `threatbias_ERLAB`
-- `vigilance_ERLAB`
-- `disengage_ERLAB`
+Variables for the regression analysis (Aim 2):   
+- `threatbias_ERLAB`  
+- `vigilance_ERLAB`  
+- `disengage_ERLAB`  
 
 ## Data preprocessing 
 ### Outliers and missingness
@@ -80,21 +80,6 @@ Outliers were already removed from the data by our collaborators based on the pe
 
 ### Colinearity and transformation
 The dataset will be checked for variables that are linear combinations of other variables and those indicated will be removed. Variables will be standardized using the `scale()` function to mean = 0, and standard deviation = 1.  
-
-
-# Planned analyses
-## K-Means Clustering Analysis
-### Development
-The number of clusters to begin with will be decided by comparing the results of several different methods:
-
-- Determine the optimal number of clusters to try with k-means by comparing the results of several different methods:
-    - The sum of squared error (SSE) scree plot
-    - The `NbClust` function with method `kmeans`
-        - using the `nstart` option as recommended [here](https://www.r-statistics.com/2013/08/k-means-clustering-from-r-in-action/), which attempts multiple initial configurations and reports on the best one.  
-    - [`factoextra::fviz_nbclust()`](https://www.datanovia.com/en/blog/types-of-clustering-methods-overview-and-quick-start-r-code/)
-    - Cross-validation with 10 folds
-- A number of different clustering solutions will be tried by using cross-validation
-- An importnat note about k-means is that ["it can only detect compact, hyperspherical clusters that are well separated."](https://www.sciencedirect.com/science/article/pii/S0957417412008767)  
 
 # Code
 ## Data cleaning
@@ -286,12 +271,6 @@ plot(hclust_out)
 hclust_clusters <- cutree(hclust_out, ) # use either the h parameter (height) or number of clusters desired (k parameter) to select where to cut the dendrogram
 ```
 
- 
-
-    
-    
-    
-    
     
 # Analysis Plan, Aim 2: Between-subject analysis of variance (ANOVA) 
 This doesn't need to be done right away. Will do cluster analysis first & send to HC, then get to this.
