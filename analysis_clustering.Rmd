@@ -638,7 +638,7 @@ fit_df[, varlist] <- sapply(fit_df[varlist], function(x){
 
 
 ```{r save objects}
-save(data_matrix_aim1, km_k2_res$cluster, pca_summary, pca_scaled, data_pca2components, kmeans_kcca, variable_means_km2, variable_means_km3, file = "clustering_objects.Rda")
+save(data_matrix_aim1, km_k2_res, pca_summary, pca_scaled, data_pca2components, variable_means_km2, variable_means_km3, file = "clustering_objects.Rda")
 save(kmeans_kcca, file = "clustering_model_kmeans2.Rda")
 save(table_cluster_descr, table_cluster_fit, fit_df, clusstats_df, file = "descriptives_tables.Rda")
 ```
