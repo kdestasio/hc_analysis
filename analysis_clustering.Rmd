@@ -119,19 +119,20 @@ myfun_myscreeplot <- function(wss, clus_range, title){
          xlab = "Number of Clusters", 
          ylab = "Within groups sum of squares", 
          main = title,
-         ylim = c(0, 6000))
+         ylim = c(0, 7000))
 }
 
 # Function to plot means by variable and cluster memberships
 myfun_plotmeansbyclus <- function(clusters_to_plot, title){
     dataframe <-  cbind(data_matrix[,1], clusters_to_plot, data_matrix_aim1) %>% 
-    gather(., variable, measurement, rt_neutral_nt:peak_neg)
+    gather(., variable, measurement, rt_neutral_nt:variability)
     dataframe$clusters <- as.factor(dataframe$clusters_to_plot)
     
     ggplot(dataframe, aes(x = variable, y = measurement, fill = clusters)) + 
-        geom_boxplot() +
+        geom_point(alpha = 0.2,  pch = 21, position = position_jitterdodge()) +
+        geom_boxplot(alpha = 0.4) +
         theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
-        ggtitle(title)
+        ggtitle(title) 
 }
 
 # Function to get raw score means based on cluster membership
@@ -181,8 +182,7 @@ data_matrix_aim1 <- subset(data_matrix,
                                        vigilance_erlab, 
                                        disengage_erlab, 
                                        stai_trait_totalscore,
-                                       rt_outliers,
-                                       variability))
+                                       rt_outliers))
 data_matrix_aim2 <- subset(data_matrix, 
                            select = c(subject_id,
                                       threatbias_erlab, 
@@ -409,8 +409,8 @@ set.seed(50)
 
 ```{r kmeans plot var means by cluster}
 par(mfrow = c(1,2)) 
-myfun_plotmeansbyclus(km_k2_res$cluster, 'K-Means PCA2 Clustering Solution: \n2 Clusters, Raw Variable Scores')
-myfun_plotmeansbyclus(km_k3_res$cluster, 'K-Means PCA2 Clustering Solution: \n2 Clusters, Raw Variable Scores')
+myfun_plotmeansbyclus(km_k2_res$cluster, 'K-Means PCA2 Clustering Solution: 2 Clusters, Raw Variable Scores')
+myfun_plotmeansbyclus(km_k3_res$cluster, 'K-Means PCA2 Clustering Solution: 2 Clusters, Raw Variable Scores')
 ```
 
 #### Summary Statistics
@@ -638,7 +638,7 @@ fit_df[, varlist] <- sapply(fit_df[varlist], function(x){
 
 
 ```{r save objects}
-save(data_matrix_aim1, km_k2_res, pca_summary, pca_scaled, data_pca2components, variable_means_km2, variable_means_km3, file = "clustering_objects.Rda")
+save(data_matrix_aim1, km_k2_res, km_k3_res, pca_summary, pca_scaled, data_pca2components, variable_means_km2, variable_means_km3, file = "clustering_objects.Rda")
 save(kmeans_kcca, file = "clustering_model_kmeans2.Rda")
 save(table_cluster_descr, table_cluster_fit, fit_df, clusstats_df, file = "descriptives_tables.Rda")
 ```
