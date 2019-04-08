@@ -1,18 +1,26 @@
 ---
 title: "Cluster Analysis Summary"
 author: "Krista DeStasio"
-date: "3/15/2019"
+date: '2019-03-27'
 output:
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+  word_document:
+    toc: yes
+    toc_depth: '3'
   html_document:
     toc: yes
     toc_depth: 3
     toc_float: no
-  word_document:
-    toc: yes
-    toc_depth: '3'
-  pdf_document:
-    toc: yes
-    toc_depth: '3'
+tags:
+- clustering
+- tutorials
+- how to
+- R
+- k-means
+- hierarchical clustering
+- unsupervised learning
 ---
 
 ```{r include=FALSE}
@@ -59,7 +67,7 @@ Variable name      | Description | Included in analysis?
 `peak_pos`| highest positive trial-level threat bias score | YES
 `peak_neg`| highest negative trial-level threat bias score  | YES
 `rt_outliers`| # of trials considered to be outliers based on the following criteria (RTs faster than 150 ms or slower than 2000 ms; any trial RT that was +/- 3 SD from the person’s mean RT for that trial type) | NO
-`variability`| absolute value of the distance across all trial-level threat bias scores / number of pairs | NO 
+`variability`| absolute value of the distance across all trial-level threat bias scores / number of pairs | YES  
 
 #2. Implementation of cluster model for cluster membership prediction
 
@@ -189,16 +197,16 @@ kable(clusstats_df, digits = 2, row.names = FALSE,
 
 ```
 
-**Figure 2. K-means 2 cluster Plot**  
-![](/Users/kristadestasio/Dropbox/collaborations/hunter_college/hc_analysis/Figs/unnamed-chunk-1-1.png)
+**Figure 2. K-means 2 cluster Plot**    
+![](/Users/kristadestasio/Dropbox/collaborations/hunter_college/hc_analysis/Figs/unnamed-chunk-1-1.png)  
 
-**Figure 3. K-means 2 cluster Silhouette Plot Plot**
+**Figure 3. K-means 2 cluster Silhouette Plot Plot**  
 
-![](/Users/kristadestasio/Dropbox/collaborations/hunter_college/hc_analysis/Figs/unnamed-chunk-1-3.png)
+![](/Users/kristadestasio/Dropbox/collaborations/hunter_college/hc_analysis/Figs/unnamed-chunk-1-3.png)  
 
 
-**Figure 4. Plot of Variable Means by Cluster Based on K-means Clustering**
-![](/Users/kristadestasio/Dropbox/collaborations/hunter_college/hc_analysis/Figs/unnamed-chunk-10-2.png)
+**Figure 4. Plot of Variable Means by Cluster Based on K-means Clustering**  
+![](/Users/kristadestasio/Dropbox/collaborations/hunter_college/hc_analysis/Figs/unnamed-chunk-10-2.png)  
 
 ```{r}
 kable(aggregate(data_matrix_aim1, 
@@ -206,4 +214,24 @@ kable(aggregate(data_matrix_aim1,
       digits = 2,
       caption = "Table 5. K-means 2 Cluster Solution: Raw Score Means by Cluster")
 ```
+
+# 4. Additional Clarification
+Looking at the K-means plots, we see that the 2 cluster solution (Figure 5) produces one cluster (cluster 2) with observations that tend to be closer to zero, whereas cluster 1 observations tend to to be more greatly negative or positive. The 3 cluster K-means solution (Figure 6), generates a third cluster (cluster 1 of the 3 cluster solution) by pulling some observations from the other 2 clusters without adding any new observations to them.   
+
+**Figure 5. **  
+![](/Users/kristadestasio/Dropbox/collaborations/hunter_college/hc_analysis/Figs/kmeans plot var means by cluster-1.png)
+
+**Figure 6. **  
+![](/Users/kristadestasio/Dropbox/collaborations/hunter_college/hc_analysis/Figs/kmeans plot var means by cluster-2.png)  
+
+We can see that this is the vase by examining the `table()` output included below.  
+
+```{r}
+table(km_k2_res$cluster)
+table(km_k3_res$cluster)
+table(km_k2_res$cluster, km_k3_res$cluster)
+```
+
+The clusters themselves are simply a representation of how the data are grouped together. There is no meaning inherent in the clusters. This is where your expertise regarding the clinical literature and this task in particular should inform the decision of whether to use a 2 or 3 cluster solution. To me, a two cluster solution seems the most straight forward as the clusters seem to represent slower responders with more extreme peak and mean threat bias scores (cluster 1) and faster responders with less extreme threat bias scores (cluster 2). However, I do not have the in-depth knowledge of the dot probe to make an informed decision as to whether a 2 or 3 cluster solution makes more sense _for this task_. Either solution will work for out of sample prediction, at this point, it's a matter of which grouping makes the most sense based on your understanding of the task and what you want to test. My one recommendation would be to pre-register on OSF or elsewhere which clustering solution you choose to implement (2 or 3 centroids with K-means) and why as it is a subjective decision and preregistration will likely help alleviate reviewer concerns during review.  
+
 
