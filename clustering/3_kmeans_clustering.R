@@ -15,17 +15,26 @@ load("output/data_pca3_bias.Rda")
 
 
 # Function to run k-means, varying k ------------------------------------------------
+# kmeans_vary_k <- function(df, min_k, max_k){
+#     set.seed(20) # for nstart
+#     km_out <- purrr::map(seq(from = min_k, to = max_k), 
+#                              ~kmeans(df, centers = .x, nstart = 20))
+#     assign(paste0("km_", deparse(substitute(df))), km_out, envir = globalenv())
+# }
+
 kmeans_vary_k <- function(df, min_k, max_k){
     set.seed(20) # for nstart
-    km_out <- purrr::map(seq(from = min_k, to = max_k), 
-                             ~kmeans(df, centers = .x, nstart = 20))
-    assign(paste0("km_", deparse(substitute(df))), km_out, envir = globalenv())
+    purrr::map(seq(from = min_k, to = max_k),
+               ~eclust(df,
+                       FUNcluster = 'kmeans',
+                       hc_metric = 'euclidean',
+                       k = .x, nstart = 25, graph = TRUE))
 }
 
 # Run k-means -------------------------------------------------------------
 
-kmeans_vary_k(data_pca3_rt, min_k = 1, max_k = 4)
-kmeans_vary_k(data_pca3_bias, min_k = 1, max_k = 4)
+km_data_pca3_rt <- kmeans_vary_k(data_pca3_rt, min_k = 2, max_k = 4)
+km_data_pca3_bias <- kmeans_vary_k(data_pca3_bias, min_k = 2, max_k = 4)
 
 save(km_data_pca3_rt, file = "output/data_km_pca3_rt.Rda")
 save(km_data_pca3_bias, file = "output/data_km_pca3_bias.Rda")
