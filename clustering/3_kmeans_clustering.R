@@ -8,7 +8,6 @@
 library(here)
 library(purrr)
 
-setwd(here())
 
 load("output/data_pca3_rt.Rda")
 load("output/data_pca3_bias.Rda")

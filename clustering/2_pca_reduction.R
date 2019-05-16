@@ -9,7 +9,6 @@
 
 # Set-up ------------------------------------------------------------------
 library(here)
-setwd(here())
 dir.create(file.path(here(), "plots"), showWarnings = FALSE)
 
 # Load the scaled data ----------------------------------------------------
