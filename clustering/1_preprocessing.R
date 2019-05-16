@@ -20,12 +20,11 @@ table(is.na(data_rt))
 table(is.na(data_bias))
 
 # Make sure there are no outliers (Want 0) ---------------------------------------------------------
-OutVals = boxplot(data_rt, plot = FALSE)$out
+OutVals <- boxplot(data_rt, plot = FALSE)$out
 which(data_rt %in% OutVals) 
 
-OutVals = boxplot(data_bias, plot = FALSE)$out
+OutVals <- boxplot(data_bias, plot = FALSE)$out
 which(data_bias %in% OutVals) 
-
 
 # Frequency ratio & % of unique values (Want all FALSE) ---------------------------------------------------------
 # http://topepo.github.io/caret/pre-processing.html
