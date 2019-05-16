@@ -9,7 +9,6 @@ library(caret)
 library(knitr)
 library(kableExtra)
 library(arsenal)
-setwd(here())
 
 # load the data frame you want to work with ---------------------------------------------------------
 load("output/data_rt.Rda")
