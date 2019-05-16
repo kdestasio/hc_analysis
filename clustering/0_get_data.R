@@ -7,7 +7,6 @@
 library(here)
 library(janitor)
 
-setwd(here())
 
 # Read-in the data ---------------------------------------------------------
 path_datafile <- here('data/N=844_FINAL_Traditional metrics_Trial Level metrics_questionnaires (n=837)_6.16.18.xlsx')
