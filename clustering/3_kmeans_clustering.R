@@ -3,7 +3,6 @@
 # to minimize within group sum of squares and maximize between group sum of squares. To help determine the 
 # number of clusters to use, k-means is run with 1 through 4 clusters. 
 
-
 # Set-up ------------------------------------------------------------------
 library(here)
 library(purrr)
@@ -11,7 +10,6 @@ library(factoextra)
 
 load("output/data_pca3_rt.Rda")
 load("output/data_pca3_bias.Rda")
-
 
 # Function to run k-means, varying k ------------------------------------------------
 
