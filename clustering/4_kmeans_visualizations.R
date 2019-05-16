@@ -57,36 +57,40 @@ myscreeplot(km_data_pca3_bias)
 dev.off()
 
 # Silhoutte plots ---------------------------------------------------------
-silplots_bias <- map(km_data_pca3_bias, ~fviz_silhouette(.x, palette = "jco", print.summary = FALSE))
-silplots_rt <- map(km_data_pca3_rt, ~fviz_silhouette(.x, palette = "jco", print.summary = FALSE))
+silplots_bias <- map(km_data_pca3_bias, ~fviz_silhouette(.x, palette = "jco", print.summary = FALSE, ggtheme = theme_minimal()))
+silplots_rt <- map(km_data_pca3_rt, ~fviz_silhouette(.x, palette = "jco", 
+                                                     print.summary = FALSE, 
+                                                     ggtheme = theme_minimal()))
 
-nclusts <- c(max(km_data_pca3_bias[[1]]$cluster):max(km_data_pca3_bias[[3]]$cluster))
+## Save the plots
+nclusts_rt <- c(max(km_data_pca3_rt[[1]]$cluster):max(km_data_pca3_rt[[length(km_data_pca3_rt)]]$cluster))
+nclusts_bias <- c(max(km_data_pca3_bias[[1]]$cluster):max(km_data_pca3_bias[[length(km_data_pca3_bias)]]$cluster))
 
-file_names <- paste0("silplot_pca3_rt_", nclusts, "clusters", ".png")
-paths <- here::here("plots", file_names)
-walk2(paths, silplots_rt, ggsave,
-      width = 9.5, 
-      height = 6.5,
-      dpi = 500)
+paste0("silplot_pca3_rt_", nclusts_rt, "clusters", ".png") %>% 
+    here::here("plots", .) %>% 
+    walk2(., silplots_rt, ggsave,
+          width = 9.5, 
+          height = 6.5,
+          dpi = 500)
 
-file_names <- paste0("silplot_pca3_bias_", nclusts, "clusters", ".png")
-paths <- here::here("plots", file_names)
-walk2(paths, silplots_bias, ggsave,
-      width = 9.5, 
-      height = 6.5,
-      dpi = 500)
+paste0("silplot_pca3_bias_", nclusts_bias, "clusters", ".png") %>% 
+    here::here("plots", .) %>% 
+    walk2(., silplots_bias, ggsave,
+          width = 9.5, 
+          height = 6.5,
+          dpi = 500)
 
 # Biplots -----------------------------------------------------------------
-file_names <- paste0("biplot_pca3_rt_", nclusts, "clusters", ".png")
-paths <- here::here("plots", file_names)
-walk2(km_data_pca3_rt, paths, ~ggsave(.y, .x$clust_plot,
-      width = 9.5, 
-      height = 6.5,
-      dpi = 500))
+paste0("biplot_pca3_rt_", nclusts_rt, "clusters", ".png") %>% 
+    here::here("plots", .) %>% 
+    walk2(km_data_pca3_rt, ., ~ggsave(.y, .x$clust_plot,
+          width = 9.5, 
+          height = 6.5,
+          dpi = 500))
 
-file_names <- paste0("biplot_pca3_bias_", nclusts, "clusters", ".png")
-paths <- here::here("plots", file_names)
-walk2(km_data_pca3_bias, paths, ~ggsave(.y, .x$clust_plot,
+paste0("biplot_pca3_bias_", nclusts_bias, "clusters", ".png") %>% 
+    paths <- here::here("plots", .) %>% 
+    walk2(km_data_pca3_bias, ., ~ggsave(.y, .x$clust_plot,
                                       width = 9.5, 
                                       height = 6.5,
                                       dpi = 500))
