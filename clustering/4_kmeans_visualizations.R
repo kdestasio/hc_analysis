@@ -10,18 +10,18 @@ library(factoextra)
 setwd(here())
 
 # PCA data
-load("output/data_pca3_rt.Rda")
-load("output/data_pca3_bias.Rda")
+load(here("output", "data_pca3_rt.Rda"))
+load(here("output", "data_pca3_bias.Rda"))
 
 # K-means clustering solutions
-load("output/data_km_pca3_rt.Rda")
-load("output/data_km_pca3_bias.Rda")
+load(here("output", "data_km_pca3_rt.Rda"))
+load(here("output", "data_km_pca3_bias.Rda"))
 
 # Scatterplot colored by cluster membership -------------------------------------
 myscat <- function(df, data_tomaponto){
     for (i in seq_along(df)) {
         nclusts <- max(unique(df[[i]]$cluster))
-        jpeg(paste0("plots/scatplot", deparse(substitute(df)), "_", nclusts, "clusters.jpg"))
+        jpeg(here("plots", paste0("scatplot", deparse(substitute(df)), "_", nclusts, "clusters.jpg")))
         plot(data_tomaponto, 
              col = df[[i]]$cluster, 
              main = paste(nclusts, "clusters:", deparse(substitute(df)))
@@ -41,7 +41,7 @@ myscreeplot <- function(df) {
     for (i in seq_along(df)) {
         wss[i + 1] <- df[[i]]$tot.withinss
     }
-    jpeg(paste0("plots/screeplot_totalss_", deparse(substitute(df)), ".jpg"))
+    jpeg(here("plots", paste0("screeplot_totalss_", deparse(substitute(df)), ".jpg")))
     plot(1:4, wss, type = "b", 
          xlab = "Number of Clusters", 
          ylab = "Within groups sum of squares", 

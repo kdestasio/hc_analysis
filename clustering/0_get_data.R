@@ -9,7 +9,7 @@ library(janitor)
 
 
 # Read-in the data ---------------------------------------------------------
-path_datafile <- here('data/N=844_FINAL_Traditional metrics_Trial Level metrics_questionnaires (n=837)_6.16.18.xlsx')
+path_datafile <- here("data", "N=844_FINAL_Traditional metrics_Trial Level metrics_questionnaires (n=837)_6.16.18.xlsx")
 
 data_frame <- clean_names(readxl::read_excel(path_datafile))
 
@@ -24,6 +24,6 @@ data_bias <- data_frame %>%
                          rt_threat_nt, variability))
 
 # Save the two data frames as .Rda files ---------------------------------------------------------
-dir.create(file.path(here(), "output"), showWarnings = FALSE)
-save(data_rt, file = "output/data_rt.Rda")
-save(data_bias, file = "output/data_bias.Rda")
+dir.create(here( "output"), showWarnings = FALSE)
+save(data_rt, file = here("output", "data_rt.Rda"))
+save(data_bias, file = here("output", "data_bias.Rda"))
