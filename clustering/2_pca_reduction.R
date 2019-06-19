@@ -9,11 +9,11 @@
 
 # Set-up ------------------------------------------------------------------
 library(here)
-dir.create(file.path(here(), "plots"), showWarnings = FALSE)
+dir.create(here("plots"), showWarnings = FALSE)
 
 # Load the scaled data ----------------------------------------------------
-load("output/scaled_data_rt.Rda")
-load("output/scaled_data_bias.Rda")
+load(here("output", "scaled_data_rt.Rda"))
+load(here("output", "scaled_data_bias.Rda"))
 
 # Run PCA on the scaled data ----------------------------------------------
 pca_scaled_rt <- prcomp(x = scaled_data_rt)
@@ -74,15 +74,18 @@ dev.off()
 pca_summary_rt <- summary(pca_scaled_rt)
 kable(pca_summary_rt$importance, digits = 2, 
       caption = 'PCA Summary Table, RT Dataset') %>% 
-    arsenal::write2html(paste0(here("output/"), "kable_pca_variance_rt.html"), quiet = TRUE)
+    arsenal::write2html(here("output", "kable_pca_variance_rt.html"), quiet = TRUE)
 
 pca_summary_bias <- summary(pca_scaled_bias)
 kable(pca_summary_bias$importance, digits = 2, 
       caption = 'PCA Summary Table, Threat Bias Dataset') %>% 
-    arsenal::write2html(paste0(here("output/"), "kable_pca_variance_bias.html"), quiet = TRUE)
+    arsenal::write2html(here("output", "kable_pca_variance_bias.html"), quiet = TRUE)
 
 # Save data ---------------------------------------------------------
 data_pca3_rt <- pca_scaled_rt$x[,1:3]
 data_pca3_bias <- pca_scaled_bias$x[,1:3]
-save(data_pca3_rt, file = "output/data_pca3_rt.Rda")
-save(data_pca3_bias, file = "output/data_pca3_bias.Rda")
+save(data_pca3_rt, file = here("output", "data_pca3_rt.Rda"))
+save(data_pca3_bias, file = here("output", "data_pca3_bias.Rda"))
+
+save(pca_summary_rt, file = here("output", "data_pcasummary_rt.Rda"))
+save(pca_summary_bias, file = here("output", "data_pcasummary_bias.Rda"))

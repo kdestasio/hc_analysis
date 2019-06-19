@@ -18,24 +18,23 @@ load("output/data_km_pca3_rt.Rda")
 load("output/data_km_pca3_bias.Rda")
 
 # Scatterplot colored by cluster membership -------------------------------------
-myscat <- function(df){
+myscat <- function(df, data_tomaponto){
     for (i in seq_along(df)) {
         nclusts <- max(unique(df[[i]]$cluster))
         jpeg(paste0("plots/scatplot", deparse(substitute(df)), "_", nclusts, "clusters.jpg"))
-        plot(data_pca3_bias, 
+        plot(data_tomaponto, 
              col = df[[i]]$cluster, 
              main = paste(nclusts, "clusters:", deparse(substitute(df)))
         )
     }
 }
 
-myscat(km_data_pca3_rt)
+myscat(km_data_pca3_rt, data_pca3_rt)
 dev.off()
-myscat(km_data_pca3_bias)
+myscat(km_data_pca3_bias, data_pca3_bias)
 dev.off()
 
 # Function for scree plot of total sums of squares for each solution -------------------------------------
-
 myscreeplot <- function(df) {
     wss <- 0
     wss[1] <- NA
@@ -57,7 +56,9 @@ myscreeplot(km_data_pca3_bias)
 dev.off()
 
 # Silhoutte plots ---------------------------------------------------------
-silplots_bias <- map(km_data_pca3_bias, ~fviz_silhouette(.x, palette = "jco", print.summary = FALSE, ggtheme = theme_minimal()))
+silplots_bias <- map(km_data_pca3_bias, ~fviz_silhouette(.x, palette = "jco", 
+                                                         print.summary = FALSE, 
+                                                         ggtheme = theme_minimal()))
 silplots_rt <- map(km_data_pca3_rt, ~fviz_silhouette(.x, palette = "jco", 
                                                      print.summary = FALSE, 
                                                      ggtheme = theme_minimal()))
@@ -89,7 +90,7 @@ paste0("biplot_pca3_rt_", nclusts_rt, "clusters", ".png") %>%
           dpi = 500))
 
 paste0("biplot_pca3_bias_", nclusts_bias, "clusters", ".png") %>% 
-    paths <- here::here("plots", .) %>% 
+    here::here("plots", .) %>% 
     walk2(km_data_pca3_bias, ., ~ggsave(.y, .x$clust_plot,
                                       width = 9.5, 
                                       height = 6.5,

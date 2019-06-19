@@ -11,8 +11,8 @@ library(kableExtra)
 library(arsenal)
 
 # load the data frame you want to work with ---------------------------------------------------------
-load("output/data_rt.Rda")
-load("output/data_bias.Rda")
+load(here("output", "data_rt.Rda"))
+load(here("output", "data_bias.Rda"))
 
 # Are any observations missing? (Want all FALSE) ---------------------------------------------------------
 table(is.na(data_rt))
@@ -53,14 +53,19 @@ scaled_data_bias <- scale(data_bias)
 # Check that the data are scaled ---------------------------------------------------------
 scaled_means_rt <- round(colMeans(scaled_data_rt), 2)
 scaled_sds_rt <- apply(scaled_data_rt, 2, sd)
-kable(rbind(raw_means_rt, raw_sds_rt, scaled_means_rt, scaled_sds_rt), digits = 2) %>% 
-    arsenal::write2html(paste0(here("output/"), "kable_rt_compare_means.html"), quiet = TRUE)
+data_means_rt <- rbind(raw_means_rt, raw_sds_rt, scaled_means_rt, scaled_sds_rt)
+kable(data_means_rt, digits = 2) %>% 
+    arsenal::write2html(here("output", "kable_rt_compare_means.html"), quiet = TRUE)
 
 scaled_means_bias <- round(colMeans(scaled_data_bias), 2)
 scaled_sds_bias <- apply(scaled_data_bias, 2, sd)
-kable(rbind(raw_means_bias, raw_sds_bias, scaled_means_bias, scaled_sds_bias), digits = 2) %>% 
-    arsenal::write2html(paste0(here("output/"), "kable_bias_compare_means.html"), quiet = TRUE)
+data_means_bias <- rbind(raw_means_bias, raw_sds_bias, scaled_means_bias, scaled_sds_bias)
+kable(data_means_bias, digits = 2) %>% 
+    arsenal::write2html(here("output", "kable_bias_compare_means.html"), quiet = TRUE)
 
 # Save data ---------------------------------------------------------
-save(scaled_data_rt, file = "output/scaled_data_rt.Rda")
-save(scaled_data_bias, file = "output/scaled_data_bias.Rda")
+save(scaled_data_rt, file = here("output", "scaled_data_rt.Rda"))
+save(scaled_data_bias, file = here("output", "scaled_data_bias.Rda"))
+
+save(data_means_bias, file = here("output", "data_means_bias.Rda"))
+save(data_means_rt, file = here("output", "data_means_rt.Rda"))

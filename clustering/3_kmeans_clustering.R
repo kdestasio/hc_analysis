@@ -8,8 +8,8 @@ library(here)
 library(purrr)
 library(factoextra)
 
-load("output/data_pca3_rt.Rda")
-load("output/data_pca3_bias.Rda")
+load(here("output", "data_pca3_rt.Rda"))
+load(here("output", "data_pca3_bias.Rda"))
 
 # Function to run k-means, varying k ------------------------------------------------
 
@@ -27,5 +27,5 @@ kmeans_vary_k <- function(df, min_k, max_k){
 km_data_pca3_rt <- kmeans_vary_k(data_pca3_rt, min_k = 2, max_k = 4)
 km_data_pca3_bias <- kmeans_vary_k(data_pca3_bias, min_k = 2, max_k = 4)
 
-save(km_data_pca3_rt, file = "output/data_km_pca3_rt.Rda")
-save(km_data_pca3_bias, file = "output/data_km_pca3_bias.Rda")
+save(km_data_pca3_rt, file = here("output", "data_km_pca3_rt.Rda"))
+save(km_data_pca3_bias, file = here("output", "data_km_pca3_bias.Rda"))
