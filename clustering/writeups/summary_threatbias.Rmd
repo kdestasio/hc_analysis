@@ -1,0 +1,79 @@
+---
+title: 'Hunter College Data: Clustering Analysis with Threat Bias Variables'
+author: "Krista DeStasio"
+date: "06/19/2019"
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_depth: 3
+    toc_float: no
+  word_document:
+    toc: yes
+    toc_depth: '3'
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(here)
+library(knitr)
+knitr::opts_chunk$set(cache = TRUE,
+                      echo = FALSE, eval = TRUE)
+```
+
+# Background information
+All analyses were conducted using R (R Core Team, 2018).
+
+```
+platform       x86_64-apple-darwin15.6.0   
+arch           x86_64                      
+os             darwin15.6.0                
+system         x86_64, darwin15.6.0        
+status                                     
+major          3                           
+minor          5.1                         
+year           2018                        
+month          07                          
+day            02                          
+svn rev        74947                       
+language       R                           
+version.string R version 3.5.1 (2018-07-02)
+nickname       Feather Spray        
+```
+
+**Variables included in the analysis**
+
+- `threatbias_erlab`  
+- `vigilance_erlab`  
+- `disengage_erlab`  
+- `rt_threat_nt`  
+- `variability`  
+
+# Pre-processing
+## Outliers and missingness
+Outliers were already removed from the data by our collaborators based on the percentage of trials that were answered correctly. Participants with an accuracy of .80 or greater are included in the dataset. There are no initial missing data for the dot probe measures as the included metrics can be computed for anyone who completed the task. 
+
+## Zero and near zero variance
+All variables were checked for zero or near zero variance and no issues were found.  
+
+## Linear dependencies
+`disengage_erlab` is a linear combination of `threatbias_erlab` and `vigilance_erlab`. `disengage_erlab` was therefore not included in the clustering analysis.
+
+```
+ disengage = threat_bias - vigilance
+```
+
+## Standardization/Scaling
+
+Clustering is sensitive to differences in the measurement scales of data. Since the means and standard deviations do vary across features, we standardized them by mean centering Using the `scale()` function. Variables are scaled to mean = 0, sd = 1.  
+
+```{r}
+load(here("output", "data_means_bias.Rda"))
+kable(data_means_bias, digits = 2)
+```
+
+ 

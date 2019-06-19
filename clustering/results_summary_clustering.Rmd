@@ -182,7 +182,7 @@ K-means, spectral clustering, and hierarchical clustering algorithms were used t
     - Average distance between clusters (higher = better)
 - Cluster distance (compactness & separation)
     - Silhouette coefficient (closer to 1 means well classified, near 0 means observations are between clusters, negative means observations are likely misclassified)
-    - Number of observations with a negative sillhuoette
+    - Number of observations with a negative silhuoette
     
 The K-means 2 cluster solution is preferred because in comparison to the other models, it does not have any clusters that are extremely small, it has a relatively high silhouette coefficient (per cluster and average) with few misclassifications based on the number of observations with a negative sillhuoette, and comparatively good between and within cluster average distances. Furthermore, the 2 cluster solution produces results that are relatiely interpretable based on the an examination of the variables by cluster (see Figure 4 and Table 5.).    
     
