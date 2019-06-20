@@ -7,7 +7,8 @@ library(here)
 library(purrr)
 library(factoextra)
 
-setwd(here())
+# Raw bias score
+load(here("output", "data_bias.Rda"))
 
 # PCA data
 load(here("output", "data_pca3_rt.Rda"))
@@ -55,6 +56,7 @@ dev.off()
 myscreeplot(km_data_pca3_bias)
 dev.off()
 
+
 # Silhoutte plots ---------------------------------------------------------
 silplots_bias <- map(km_data_pca3_bias, ~fviz_silhouette(.x, palette = "jco", 
                                                          print.summary = FALSE, 
@@ -95,3 +97,25 @@ paste0("biplot_pca3_bias_", nclusts_bias, "clusters", ".png") %>%
                                       width = 9.5, 
                                       height = 6.5,
                                       dpi = 500))
+
+
+# Boxplots ----------------------------------------------------------------
+
+myplot <- function(x, title_as_string){
+    jpeg(here("plots", paste0("boxplot_bias_", length(unique(x$cluster)), "clusters.jpg")))
+    cbind(data_bias, cluster = x$cluster) %>% 
+        gather(value = value, key = variable, -cluster) %>% 
+        ggplot(., aes(x = variable, y = value, fill = factor(cluster))) + 
+        geom_point(alpha = 0.2,  pch = 21, position = position_jitterdodge()) +
+        geom_boxplot(alpha = 0.4) +
+        theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+        ggtitle(title_as_string) 
+}
+
+myplot(km_data_pca3_bias[[1]], "Observations by variable and cluster membership: 2 cluster solution") 
+dev.off()
+myplot(km_data_pca3_bias[[2]], "Observations by variable and cluster membership: 3 cluster solution")
+dev.off()
+myplot(km_data_pca3_bias[[3]], "Observations by variable and cluster membership: 4 cluster solution")
+dev.off()
+load(here("output", "scaled_data_bias.Rda"))     
