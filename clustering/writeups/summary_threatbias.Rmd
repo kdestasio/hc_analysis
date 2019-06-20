@@ -21,6 +21,9 @@ editor_options:
 ```{r setup, include=FALSE}
 library(here)
 library(knitr)
+library(purrr)
+library(ggplot2)
+library(factoextra)
 knitr::opts_chunk$set(cache = TRUE,
                       echo = FALSE, eval = TRUE)
 ```
@@ -69,11 +72,59 @@ All variables were checked for zero or near zero variance and no issues were fou
 
 ## Standardization/Scaling
 
-Clustering is sensitive to differences in the measurement scales of data. Since the means and standard deviations do vary across features, we standardized them by mean centering Using the `scale()` function. Variables are scaled to mean = 0, sd = 1.  
+Clustering is sensitive to differences in the measurement scales of data. Since the means and standard deviations do vary across features, we standardized them by mean centering Using the `scale()` function (see Table 1). Variables are scaled to mean = 0, sd = 1.  
 
 ```{r}
 load(here("output", "data_means_bias.Rda"))
-kable(data_means_bias, digits = 2)
+kable(data_means_bias, digits = 2,
+      caption = "Table 1. Comparison of Means for Threat Bias Variables Before and After Scaling")
 ```
+
+## Dimensionality Reduction, Principal Components Analysis  
+**Purpose: prevent overfitting of the data and improve interpretability**
+
+Principal Components Analysis (PCA) is a dimensionality reduction technique that can be used as a precursor to k-means clustering (Zha, et al., 2002; Ding & He, 2004). PCA projects high dimensional data onto a lower dimensional sub-space and rotates data to mazimize variance in the new axes. The components are then listed in order of  decreasing variance (e.g. component 1 has the most variation in the data, component 2 is orthogonal to component 1 and has the most remaining variation, and so on). PCA is an unsuprevised technique that can be used when we do not have hypotheses about the distribution of varaince across features.   
+
+![](../plots/pca_variance_bias.jpg)
+```{r}
+load(here("output", "data_pcasummary_bias.Rda"))
+kable(pca_summary_bias$importance, digits = 2, 
+      caption = 'Table 2. PCA Summary Table, Threat Bias Dataset')
+```
+
+Based on the cumulative proportion of variance accounted for by each principal component, the 3-component solution is selected for use in the clustering analysis as it is the point at which more than 90% of the variance in the data can be acounted for (see Table 2).  
+
+# K-means clustering
+K-means is a centroid based clustering approach that groups data points around a central point to minimize within group distance and maximize between group distance. To help determine the number of clusters to use, k-means is run with 2 through 4 clusters. 
+
+## Scatterplots of clustering by variable
+```{r}
+load(here("output", "data_bias.Rda"))
+load(here("output", "km_data_pca3_bias.Rda"))
+purrr::walk(km_data_pca3_bias, ~plot(data_bias[,], col = .x$cluster))
+```
+
+## Boxplots by variable
+
+![](../plots/boxplot_bias_2clusters.jpg)
+
+![](../plots/boxplot_bias_3clusters.jpg)
+
+![](../plots/boxplot_bias_4clusters.jpg)
+
+
+## Silhouette plots
+
+![](../plots/silplot_pca3_bias_2clusters.png)
+
+![](../plots/silplot_pca3_bias_3clusters.png)
+
+![](../plots/silplot_pca3_bias_4clusters.png)
+
+
+
+
+
+
 
  
