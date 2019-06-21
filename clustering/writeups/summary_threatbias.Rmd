@@ -24,8 +24,7 @@ library(knitr)
 library(purrr)
 library(ggplot2)
 library(factoextra)
-knitr::opts_chunk$set(cache = TRUE,
-                      echo = FALSE, eval = TRUE)
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE)
 ```
 
 # Background information
@@ -52,7 +51,7 @@ nickname       Feather Spray
 
 - `threatbias_erlab`  
 - `vigilance_erlab`  
-- `disengage_erlab`  
+- `disengage_erlab` (removed prior to clustering)
 - `rt_threat_nt`  
 - `variability`  
 
@@ -121,10 +120,46 @@ purrr::walk(km_data_pca3_bias, ~plot(data_bias[,], col = .x$cluster))
 
 ![](../plots/silplot_pca3_bias_4clusters.png)
 
+# Summary
+
+The clustering analysis was performed using the threat bias variables `threatbias_erlab` and `vigilance_erlab`, as well as the response time variable `rt_threat_nt` and the variability variable `variability`. As mentioned in the preprocessing section, `disengage_erlab` does not provide useful information for development of a clustering solution, nor its interpretation as the variable is a linear combination of `threatbias_erlab` and `vigilance_erlab`. The clustering results are similar to those of the previous clustering analysis conducted on the response time variables in that response time is the predominent feature on which data are clustered.  
+
+The main difference between clusters within solutions appears to relate to response time and threat bias scores, as evidenced by the boxplots and scatterplots (see above plots). As can be seen in the silhouette plots, cluster 1 is the largest in all of the clustering solutions, reflecting generally faster response times. In the 2 cluster solution, cluster 1 members have a generally faster response time and higher threat bias scores. Cluster 2 of the 2 cluster solution contains observations with generally slower response times and lower threat bias scores. Cluster 1 is most people. In the 3 cluster solution, there is also a small 3rd cluster that consists of slower response times and higher threat bias scores. Both the 2 and 3 cluster solutions are equally “good”. The 4 cluster solution  appears to break out the fourth cluster based on long response times. Any of the solutions are viable options, though the 2 and 3 cluster solutions are likely more easily interpretable and the fewer clusters there are the fewer observations fit poorly within them (see the number of negative silhouette observations in table 3). Overall clustering solution fit measures are presented in table 3 and see table 4 for summary measures of fit by cluster within each clustering solution.  
+
+```{r}
+make_table3 <- function(data) {
+    df <- NULL
+    for (i in seq_along(data)) {
+        total_within_cluster_ss <- data[[i]]$tot.withinss  # total
+        total_between_cluster_ss <- data[[i]]$betweenss  # total between ss
+        clustering_solution <- data[[i]]$nbclust  # total number of clusters
+        average_silhouette_coefficient <- data[[i]]$silinfo$avg.width  # total sil 
+        negative_silhouette <- length(which(data[[i]]$silinfo$widths[, "sil_width"] < 0))  # total neg observations
+        
+        temp <- cbind(clustering_solution, total_within_cluster_ss, total_between_cluster_ss, average_silhouette_coefficient, negative_silhouette)
+        df <- rbind(df, temp)
+    }
+    kable(df, digits = 2, caption = "Table 3. Clustering Solution Summary Statistics: by Clustering Solition")
+}
+
+make_table3(km_data_pca3_bias)
 
 
+make_table4 <- function(data) {
+    df <- NULL
+    for (i in seq_along(data)) {
+        clustering_solution <-  data[[i]]$nbclust # total number of clusters
+        clustering_solution <- rep(clustering_solution, clustering_solution)
+        cluster <- seq_along(1:data[[i]]$nbclust)
+        within_cluster_ss <- data[[i]]$withinss  # per clust
+        observations_per_cluster <- data[[i]]$size  # observations per clust
+        average_silhouette_width <- data[[i]]$silinfo$clus.avg.widths  # per clust
+        
+        temp <- cbind(clustering_solution, cluster, observations_per_cluster, within_cluster_ss, average_silhouette_width)
+        df <- rbind(df, temp)
+    }
+    kable(df, digits = 2, caption = "Table 4. Clustering Solution Summary Statistics: by Cluster, Within Clustering Solition")
+}
 
-
-
-
- 
+make_table4(km_data_pca3_bias)
+```
