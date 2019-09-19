@@ -197,3 +197,6 @@ Nerurkar, P., Shirke, A., Chandane, M., & Bhirud, S. (2018). Empirical analysis 
 Von Luxburg, U. (2007). A tutorial on spectral clustering. Statistics and computing, 17(4), 395-416.
 
 Zha, Hongyuan, Xiaofeng He, Chris Ding, Ming Gu, and Horst D Simon. “Spectral Relaxation for K-Means Clustering.” Advances in Neural Information Processing Systems, 2002, 1057–64.
+
+# See also
+This fun clustering application that will let you play with some pokemon data and kmeans clustering: [https://kdestasio.shinyapps.io/fpr_final_project/](https://kdestasio.shinyapps.io/fpr_final_project/)
