@@ -1,7 +1,7 @@
 ---
 title: 'Hunter College Data: Clustering Analysis with Threat Bias Variables'
 author: "Krista DeStasio"
-date: "06/19/2019"
+date: "2019-09-19"
 output:
   html_document:
     code_folding: hide
@@ -17,6 +17,8 @@ output:
 editor_options: 
   chunk_output_type: console
 ---
+
+
 <br></br>
 <font size="4">**_All code used in the analysis is available at [https://github.com/kdestasio/hc_analysis](https://github.com/kdestasio/hc_analysis)._**</font>  
 <br></br>
@@ -92,7 +94,9 @@ Clustering is sensitive to differences in the measurement scales of data (Mohama
 ```{r}
 load(here("output", "data_means_bias.Rda"))
 kable(data_means_bias, digits = 2,
-      caption = "Table 1. Comparison of Means for Threat Bias Variables Before and After Scaling")
+      caption = "Table 1. Comparison of Means for Threat Bias Variables Before and After Scaling", 
+      col.names = c("Threat Bias", "Vigilance", "Threat RT", "Variability")) %>% 
+      kable_styling(full_width = F)
 ```
 
 ## Dimensionality Reduction, Principal Components Analysis  
@@ -184,11 +188,15 @@ make_table4(km_data_pca3_bias)
 
 # References 
 
+Bar-Haim, Y., Lamy, D., Pergamin, L., Bakermans-Kranenburg, M. J., & Van Ijzendoorn, M. H. (2007). Threat-related attentional bias in anxious and nonanxious individuals: a meta-analytic study. Psychological bulletin, 133(1), 1.
+
 Cichosz, P. (2015). Data mining algorithms: explained using R. John Wiley & Sons Incorporated.
 
 Ding, C., & He, X. (2004, July). K-means clustering via principal component analysis. In Proceedings of the twenty-first international conference on Machine learning (p. 29). ACM.
 
 Jain, A. K. (2010). Data clustering: 50 years beyond K-means. Pattern recognition letters, 31(8), 651-666.
+
+Mathews, A., & Mackintosh, B. (1998). A cognitive model of selective processing in anxiety. Cognitive therapy and research, 22(6), 539-560.
 
 Mohamad, I. B., & Usman, D. (2013). Standardization and its effects on K-means clustering algorithm. Research Journal of Applied Sciences, Engineering and Technology, 6(17), 3299-3303.
 

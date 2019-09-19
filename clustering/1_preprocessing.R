@@ -60,6 +60,7 @@ kable(data_means_rt, digits = 2) %>%
 scaled_means_bias <- round(colMeans(scaled_data_bias), 2)
 scaled_sds_bias <- apply(scaled_data_bias, 2, sd)
 data_means_bias <- rbind(raw_means_bias, raw_sds_bias, scaled_means_bias, scaled_sds_bias)
+dimnames(data_means_bias)[[1]] <- c("Raw Mean", "Raw SD", "Scaled Mean", "Scaled SD")
 kable(data_means_bias, digits = 2) %>% 
     arsenal::write2html(here("output", "kable_bias_compare_means.html"), quiet = TRUE)
 
