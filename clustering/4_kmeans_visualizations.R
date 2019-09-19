@@ -118,4 +118,3 @@ myplot(km_data_pca3_bias[[2]], "Observations by variable and cluster membership:
 dev.off()
 myplot(km_data_pca3_bias[[3]], "Observations by variable and cluster membership: 4 cluster solution")
 dev.off()
-load(here("output", "scaled_data_bias.Rda"))     
